@@ -9,6 +9,5 @@ dist/
 .env
 .env.*
 
-
 # No ignorados
 !.env.example
