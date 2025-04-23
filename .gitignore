@@ -1,3 +1,14 @@
-node_modules
-dist
+# Dependencias
+node_modules/
+
+
+# Compilados
+dist/
+
+# Variables de entorno
 .env
+.env.*
+
+
+# No ignorados
+!.env.example
