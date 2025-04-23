@@ -21,6 +21,8 @@ import { AdminModule } from './modules/admins/admins.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const typeOrmConfig = configService.get('typeorm');
+
+        console.log('📦 Configuración TypeORM cargada desde .env:');
         if (!typeOrmConfig) {
           throw new Error('No se pudo obtener la configuración de TypeORM');
         }

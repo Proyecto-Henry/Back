@@ -8,10 +8,11 @@ import { Country } from "src/entities/Country.entity";
 import { Admin } from "src/entities/Admin.entity";
 import { AdminsService } from "../admins/admins.service";
 import { AdminsRepository } from "../admins/admins.repository";
+import { AuthService } from "./auth.service";
 
 @Module({
     imports: [TypeOrmModule.forFeature([Admin, User, Country])],
-    providers: [AdminsService, AdminsRepository, UsersService, UsersRepository],
+    providers: [AdminsService, AdminsRepository, UsersService, UsersRepository, AuthService],
     controllers: [AuthController],
     exports: []
 })

@@ -11,11 +11,11 @@ export const config = {
   port: process.env.DB_PORT as unknown as number,
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
+  synchronize: true,
+  logging: false,
   entities: ['dist/**/*.entity{.js,.ts}'],
   migrations: ['dist/migrations/*{.js,.ts}'],
-  synchronize: true,
   dropSchema: false,
-  logging: false,
 }
 
 export default registerAs('typeorm', () => config)
