@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import typeOrmConfig from './config/database.config'
+import typeOrmConfig from './config/database.config';
 import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -15,7 +15,7 @@ import { AdminModule } from './modules/admins/admins.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [typeOrmConfig]
+      load: [typeOrmConfig],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -27,12 +27,12 @@ import { AdminModule } from './modules/admins/admins.module';
           throw new Error('No se pudo obtener la configuración de TypeORM');
         }
         return typeOrmConfig;
-      }
+      },
     }),
     JwtModule.register({
       global: true,
-      signOptions: {expiresIn: '18h'},
-      secret: process.env.JWT_SECRET
+      signOptions: { expiresIn: '18h' },
+      secret: process.env.JWT_SECRET,
     }),
     AdminModule,
     UserModule,
@@ -40,7 +40,7 @@ import { AdminModule } from './modules/admins/admins.module';
     ProductModule,
     SaleModule,
     SubscriptionModule,
-    StoreModule
+    StoreModule,
   ],
   controllers: [],
   providers: [],
