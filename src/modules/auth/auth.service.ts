@@ -7,13 +7,11 @@ import { JwtService } from '@nestjs/jwt';
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-
-  async login(loginUser: loginAuthDto){
-    return "Usuario logeado exitosamente"
+  async login(loginUser: loginAuthDto) {
+    return 'Usuario logeado exitosamente';
   }
 
-
-  async signUp(signUpUser: SignUpAuthDto){
-    return "Usuario creado exitosamente"
+  async signUp(signUpUser: SignUpAuthDto) {
+    return 'Usuario creado exitosamente';
   }
 }
