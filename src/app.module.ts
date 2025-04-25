@@ -10,6 +10,7 @@ import { SaleModule } from './modules/sales/sales.module';
 import { SubscriptionModule } from './modules/subscriptions/subscriptions.module';
 import { StoreModule } from './modules/stores/stores.module';
 import { AdminModule } from './modules/admins/admins.module';
+import { CountryModule } from './modules/country/country.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { AdminModule } from './modules/admins/admins.module';
     SaleModule,
     SubscriptionModule,
     StoreModule,
+    CountryModule,
   ],
   controllers: [],
   providers: [],
