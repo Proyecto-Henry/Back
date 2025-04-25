@@ -2,6 +2,7 @@
 import eslint from '@eslint/js';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
+import { off } from 'process';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -31,6 +32,7 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
       'linebreak-style': 'off',
+      'require-await': 'off',
     },
   },
 );

@@ -11,6 +11,8 @@ import { SubscriptionModule } from './modules/subscriptions/subscriptions.module
 import { StoreModule } from './modules/stores/stores.module';
 import { AdminModule } from './modules/admins/admins.module';
 import { CountryModule } from './modules/country/country.module';
+import { CountriesSeed } from './seeds/countries/countries.seed';
+import { Country } from './entities/Country.entity';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { CountryModule } from './modules/country/country.module';
         return typeOrmConfig;
       },
     }),
+
+    TypeOrmModule.forFeature([Country]),
     JwtModule.register({
       global: true,
       signOptions: { expiresIn: '18h' },
@@ -45,6 +49,6 @@ import { CountryModule } from './modules/country/country.module';
     CountryModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [CountriesSeed],
 })
 export class AppModule {}
