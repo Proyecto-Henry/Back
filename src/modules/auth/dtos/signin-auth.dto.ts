@@ -14,5 +14,4 @@ export class loginAuthDto {
   )
   @IsNotEmpty()
   password: string;
-
 }

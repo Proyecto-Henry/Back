@@ -1,8 +1,8 @@
-import { DataSource, DataSourceOptions } from "typeorm";
-import { config as dotenvConfig } from 'dotenv'
-import { registerAs } from "@nestjs/config";
+import { DataSource, DataSourceOptions } from 'typeorm';
+import { config as dotenvConfig } from 'dotenv';
+import { registerAs } from '@nestjs/config';
 
-dotenvConfig({path: './.env'})
+dotenvConfig({ path: './.env' });
 
 export const config = {
   type: 'postgres',
@@ -16,8 +16,8 @@ export const config = {
   entities: ['dist/**/*.entity{.js,.ts}'],
   migrations: ['dist/migrations/*{.js,.ts}'],
   dropSchema: false,
-}
+};
 
-export default registerAs('typeorm', () => config)
+export default registerAs('typeorm', () => config);
 
 export const AppDataSource = new DataSource(config as DataSourceOptions);

@@ -38,10 +38,11 @@ export class SignUpAuthDto {
   })
   passwordConfirm: string;
 
-  @MaxLength(30, { message: 'El numero de celular no debe tener más de 30 caracteres.' })
+  @MaxLength(30, {
+    message: 'El numero de celular no debe tener más de 30 caracteres.',
+  })
   @IsPhoneNumber(undefined, {
-    message:
-      'El número de teléfono debe ser válido',
+    message: 'El número de teléfono debe ser válido',
   })
   @IsOptional()
   phone?: string;
@@ -49,5 +50,4 @@ export class SignUpAuthDto {
   @IsString()
   @IsOptional()
   countryId?: string;
-
 }

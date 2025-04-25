@@ -1,8 +1,7 @@
-import { Controller } from "@nestjs/common";
-import { AdminsService } from "./admins.service";
+import { Controller } from '@nestjs/common';
+import { AdminsService } from './admins.service';
 
 @Controller('admins')
 export class AdminsController {
-    constructor(private readonly adminsService: AdminsService) {}
-
+  constructor(private readonly adminsService: AdminsService) {}
 }

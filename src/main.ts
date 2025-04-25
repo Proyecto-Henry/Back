@@ -5,17 +5,17 @@ import { loggerGlobal } from './middlewares/logger.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(loggerGlobal)
+  app.use(loggerGlobal);
   const swaggerConfig = new DocumentBuilder()
-                            .setTitle('Sistema de Gestión y Ventas')
-                            .setDescription('Api construida con Nestjs')
-                            .setVersion('1.0')
-                            .addBearerAuth()
-                            .build()
-  const document = SwaggerModule.createDocument(app, swaggerConfig)
-  SwaggerModule.setup('api', app, document)
-  const port = process.env.PORT ?? 3000
+    .setTitle('Sistema de Gestión y Ventas')
+    .setDescription('Api construida con Nestjs')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api', app, document);
+  const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  console.log(`📦 Puerto levantado en http://localhost:${port}` )
+  console.log(`📦 Puerto levantado en http://localhost:${port}`);
 }
 bootstrap();
