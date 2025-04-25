@@ -1,9 +1,9 @@
-import { Column, Entity, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Admin } from './Admin.entity';
 
 @Entity({ name: 'countries' })
 export class Country {
-  @PrimaryColumn('int')
+  @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ type: 'varchar' })
