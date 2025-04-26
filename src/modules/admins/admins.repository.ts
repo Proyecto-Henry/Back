@@ -20,8 +20,8 @@ export class AdminsRepository {
     });
   }
 
-  async getAdminById(email: string) {
-    const admin = await this.adminsRepository.findOneBy({ email: email });
+  async getAdminById(admin_id: string) {
+    const admin = await this.adminsRepository.findOneBy({ id: admin_id });
     if (!admin) {
       throw new NotFoundException('Admin no encontrado');
     }

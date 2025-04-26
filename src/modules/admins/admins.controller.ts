@@ -5,10 +5,10 @@ import { AdminsService } from './admins.service';
 export class AdminsController {
   constructor(private readonly adminsService: AdminsService) {}
 
-  @Get(':email')
-    getAdminById (@Param('email') email: string) {
+  @Get(':admin_id')
+    getAdminById (@Param('admin_id') admin_id: string) {
         try {
-            const admin = this.adminsService.getAdminById(email)
+            const admin = this.adminsService.getAdminById(admin_id)
             return admin 
         } catch (error) {
             if (error instanceof HttpException) {

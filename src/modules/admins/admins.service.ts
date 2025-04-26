@@ -10,8 +10,8 @@ export class AdminsService {
     return this.adminsRepository.getAdminByEmail(email);
   }
 
-  getAdminById(email: string) {
-    return this.adminsRepository.getAdminById(email);
+  getAdminById(admin_id: string) {
+    return this.adminsRepository.getAdminById(admin_id);
   }
 
   disableAdmin(admin_id: string) {
