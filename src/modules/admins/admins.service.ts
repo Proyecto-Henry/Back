@@ -9,4 +9,12 @@ export class AdminsService {
   async getAdminByEmail(email: string) {
     return this.adminsRepository.getAdminByEmail(email);
   }
+
+  getAdminById(email: string) {
+    return this.adminsRepository.getAdminById(email);
+  }
+
+  disableAdmin(admin_id: string) {
+    return this.adminsRepository.disableAdmin(admin_id);
+  }
 }
