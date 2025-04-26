@@ -36,4 +36,10 @@ export class CountryRepository {
     }
     return 'Paises agregados';
   }
+
+  async findCountry(country: string) {
+    return await this.countryRepository.findOneBy({
+      name: country,
+    });
+  }
 }

@@ -14,20 +14,26 @@ export class AdminsRepository {
     private readonly jwtService: JwtService,
   ) {}
 
+  async getAdminByEmail(email: string) {
+    return await this.adminsRepository.findOne({
+      where: { email },
+    });
+  }
+
   async getAdminById(email: string) {
-    const admin = await this.adminsRepository.findOneBy({email: email})
-    if(!admin) {
-          throw new NotFoundException('Admin no encontrado');
+    const admin = await this.adminsRepository.findOneBy({ email: email });
+    if (!admin) {
+      throw new NotFoundException('Admin no encontrado');
     }
-    return admin
+    return admin;
   }
 
   async disableAdmin(admin_id: string) {
-    const admin = await this.adminsRepository.findOneBy({id: admin_id})
-    if(!admin) {
-        throw new NotFoundException('Admin no encontrado');
+    const admin = await this.adminsRepository.findOneBy({ id: admin_id });
+    if (!admin) {
+      throw new NotFoundException('Admin no encontrado');
     }
-    admin.status = Status_User.INACTIVE
-    await this.adminsRepository.save(admin)
+    admin.status = Status_User.INACTIVE;
+    await this.adminsRepository.save(admin);
   }
 }

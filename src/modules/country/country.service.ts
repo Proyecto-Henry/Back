@@ -7,4 +7,8 @@ export class CountryService {
   loadCountries() {
     return this.countryRepository.loadCountry();
   }
+
+  findCountry(country: string) {
+    return this.countryRepository.findCountry(country);
+  }
 }
