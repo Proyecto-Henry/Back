@@ -12,4 +12,10 @@ export class AdminsRepository {
     @InjectRepository(Country) private countrysRepository: Repository<Country>,
     private readonly jwtService: JwtService,
   ) {}
+
+  async getAdminByEmail(email: string) {
+    return await this.adminsRepository.findOne({
+      where: { email },
+    });
+  }
 }

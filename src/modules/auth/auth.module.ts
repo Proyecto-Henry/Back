@@ -9,15 +9,24 @@ import { Admin } from 'src/entities/Admin.entity';
 import { AdminsService } from '../admins/admins.service';
 import { AdminsRepository } from '../admins/admins.repository';
 import { AuthService } from './auth.service';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { Subscription } from 'src/entities/Subscription.entity';
+import { SubscriptionsRepository } from '../subscriptions/subscriptions.repository';
+import { CountryService } from '../country/country.service';
+import { CountryRepository } from '../country/country.repository';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Admin, User, Country])],
+  imports: [TypeOrmModule.forFeature([Admin, User, Country, Subscription])],
   providers: [
     AdminsService,
     AdminsRepository,
     UsersService,
     UsersRepository,
     AuthService,
+    CountryService,
+    CountryRepository,
+    SubscriptionsService,
+    SubscriptionsRepository,
   ],
   controllers: [AuthController],
   exports: [],

@@ -6,4 +6,8 @@ export class SubscriptionsService {
   constructor(
     private readonly subscriptionsRepository: SubscriptionsRepository,
   ) {}
+
+  addTrialSubscription() {
+    return this.subscriptionsRepository.addTrialSubscription();
+  }
 }
