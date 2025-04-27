@@ -13,7 +13,7 @@ export class UsersService {
     return this.usersRepository.findOneBy({ id });
   }
 
-  async findByEmail(email: string) {
+  async getUserByEmail(email: string) {
     return this.usersRepository.findOne({ where: { email: email } });
 
   }
