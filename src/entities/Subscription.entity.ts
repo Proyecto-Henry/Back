@@ -25,10 +25,10 @@ export class Subscription {
 
   @Column({ type: 'enum', enum: Status_Sub })
   status: Status_Sub;
-
+  /*
   @Column({ type: 'varchar', length: 255, nullable: false })
   external_subscription_id: string;
-
+*/
   @OneToOne(() => Admin, (admin) => admin.subscription)
   @JoinColumn({ name: 'admin_id' })
   admin: Admin;
