@@ -10,4 +10,10 @@ export class UsersRepository {
     @InjectRepository(User) private usersRepository: Repository<User>,
     private readonly jwtService: JwtService,
   ) {}
+
+  async findUserByEmail(email: string) {
+    return await this.usersRepository.findOne({
+      where: { email },
+    });
+  }
 }

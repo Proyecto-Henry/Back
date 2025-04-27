@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { SignUpAuthDto } from './dtos/signup-auth.dto';
 import { loginAuthDto } from './dtos/signin-auth.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -12,6 +17,9 @@ import { Subscription } from 'src/entities/Subscription.entity';
 import { Repository } from 'typeorm';
 import { Admin } from 'src/entities/Admin.entity';
 import { OAuth2Client } from 'google-auth-library';
+import { Role } from 'src/enums/roles.enum';
+import { User } from 'src/entities/User.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +29,7 @@ export class AuthService {
     private readonly adminsService: AdminsService,
     private readonly subscriptionService: SubscriptionsService,
     private readonly countryService: CountryService,
+    private readonly usersService: UsersService,
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
     @InjectRepository(Admin)
@@ -28,7 +37,6 @@ export class AuthService {
   ) {
     this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   }
-
 
   //! Hay que cambiar a que sea con adminsService
   // async verifyGoogleIdTokenAndLogin(
@@ -96,7 +104,36 @@ export class AuthService {
   // }
 
   async login(loginUser: loginAuthDto) {
-    return 'Usuario logeado exitosamente';
+    let userOrAdmin: Admin | User | null;
+    let role: Role;
+
+    userOrAdmin = await this.adminsService.getAdminByEmail(loginUser.email);
+    if (userOrAdmin) role = Role.ADMIN;
+    else {
+      userOrAdmin = await this.usersService.getUserByEmail(loginUser.email);
+      if (!userOrAdmin) {
+        throw new UnauthorizedException('Credenciales inválidas');
+      }
+      role = Role.USER;
+    }
+
+    if (loginUser.password != userOrAdmin.password) {
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+
+    const response = {
+      message:
+        role === Role.ADMIN
+          ? `✅Login exitoso! Bienvenido ${(userOrAdmin as Admin).name}`
+          : '✅Login exitoso! Bienvenido',
+      user: {
+        id: userOrAdmin.id,
+        email: userOrAdmin.email,
+        role: role,
+      },
+    };
+
+    return response;
   }
 
   async signUp(signUpUser: SignUpAuthDto) {
