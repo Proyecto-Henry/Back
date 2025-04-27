@@ -10,6 +10,6 @@ import { AdminsController } from './admins.controller';
   imports: [TypeOrmModule.forFeature([Admin, Country])],
   providers: [AdminsService, AdminsRepository],
   controllers: [AdminsController],
-  exports: [],
+  exports: [AdminsService],
 })
 export class AdminModule {}

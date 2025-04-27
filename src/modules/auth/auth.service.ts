@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { SignUpAuthDto } from './dtos/signup-auth.dto';
 import { loginAuthDto } from './dtos/signin-auth.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -8,6 +12,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { User } from 'src/entities/User.entity';
 import { UsersService } from '../users/users.service';
 import { first } from 'rxjs';
+import { AdminsService } from '../admins/admins.service';
 
 @Injectable()
 export class AuthService {
@@ -15,79 +20,90 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly adminsService: AdminsService,
   ) {
-    // this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+    this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   }
 
-  // async verifyGoogleIdTokenAndLogin(idToken: string): Promise<{access_token: string}> {
-  //   try { 
-  //     const ticket = await this.googleClient.verifyIdToken({
-  //       idToken: idToken,
-  //       audience: process.env.GOOGLE_CLIENT_ID
-  //     })
-    
-    // const payload = LoginTicket.getPayload()
 
-    // if(!payload || !payload.email){
-    //   throw new UnauthorizedException("Falta email o el token de google es invalido ")
-    // }
+  //! Hay que cambiar a que sea con adminsService
+  async verifyGoogleIdTokenAndLogin(
+    idToken: string,
+  ): Promise<{ access_token: string }> {
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken: idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
 
-    // const googleId = payload.sub
-    // const email = payload.email
-    // const firstname = payload.given_name
-    // const lastname = payload.family_name;
-    // const picture = payload.picture
+      const payload = ticket.getPayload();
 
-    // //! falta logica para buscar al user en la db con userService ej
-    // // await this.userService.findByEmail(email)
-    // let user = null
+      if (!payload || !payload.email) {
+        throw new UnauthorizedException(
+          'Falta email o el token de google es invalido ',
+        );
+      }
 
-    // if (!user){
-    //   console.log(`Usuario no encontrado por email ${email}. Procede a crearse`)
-    //   user = await this.usersService.create({
-    //     googleId: googleId,
-    //     email:email,
-    //     firstname: firstname,
-    //     lastname: lastname,
-    //     picture: picture,
+      const googleId = payload.sub;
+      const email = payload.email;
+      const firstname = payload.given_name;
+      const lastname = payload.family_name;
+      const picture = payload.picture;
 
+      //! FindByEmail en adminsService ya fue creado
+      // await this.userService.findByEmail(email)
+      let adminis = null;
 
-    //   })
-    // }
+      if (!adminis) {
+        console.log(
+          `Admin no encontrado por email ${email}. Procede a crearse`,
+        );
+        adminis = await this.adminsService.create({
+          googleId: googleId,
+          email: email,
+          firstname: firstname,
+          lastname: lastname,
+          picture: picture,
+        });
+      }
 
-    // const backendPayload = {
-    //   email: user.email,
-    //   sub: user.id,
-    //   role: user.role
-    // }
+      const backendPayload = {
+        email: User.email,
+        sub: User.id,
+        role: user.role,
+      };
 
-    // const accessToken = this.jwtService.sign(backendPayload)
+      const accessToken = this.jwtService.sign(backendPayload);
 
-    // return { access_token: accessToken}
+      return { access_token: accessToken };
+    } catch (error) {
+      console.error('🔥 Error al verificar el Google ID Token:', error);
+      if (
+        error.message.includes('Token used too late') ||
+        error.message.includes('Invalid token signature')
+      ) {
+        throw new UnauthorizedException('Invalid or expired Google token');
+      }
+      //! Si fallo otra cosa tiramos este error generico x ahora
+      throw new InternalServerErrorException(
+        'Fallo el proceso de autenticación',
+      );
+    }
+  }
 
-    //  } catch (error){
-    //   console.error("🔥 Error al verificar el Google ID Token:", error)
-    //   if (error.message.includes("Token used too late") || error.message.includes("Invalid token signature")){
-    //     throw new UnauthorizedException("Invalid or expired Google token")
-    //   }
-    //   //! Si fallo otra cosa tiramos este error generico x ahora
-    //   throw new InternalServerErrorException("Fallo el proceso de autenticación")
-    //  }
-  // }
+  async login(loginUser: loginAuthDto) {
+    return 'Usuario logeado exitosamente';
+  }
 
-  // async login(loginUser: loginAuthDto) {
-  //   return 'Usuario logeado exitosamente';
-  // }
+  async signUp(signUpUser: SignUpAuthDto) {
+    return 'Usuario creado exitosamente';
+  }
 
-  // async signUp(signUpUser: SignUpAuthDto) {
-  //   return 'Usuario creado exitosamente';
-  // }
+  async signInAdmin(SignInAdmin: AdminDto) {
+    return 'Admin logueado';
+  }
 
-  // async signInAdmin(SignInAdmin: AdminDto) {
-  //   return 'Admin logueado';
-  // }
-
-  // async signUpAdmin(SignUpAdmin: AdminDto) {
-  //   return 'Admin registrado';
-  // }
+  async signUpAdmin(SignUpAdmin: AdminDto) {
+    return 'Admin registrado';
+  }
 }

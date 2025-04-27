@@ -16,8 +16,8 @@ Nuestra aplicación web esta enfocada para que un usuario "Administrador" tenga 
 
     ```$ npm i```
 
-3. Configuración del archivo .env: 
-```En el archivo ```env.example``` deberías poder ver un ejemplo para la configuración de las variables```
+3. Configuración del archivo .env: <br>
+```En el archivo env.example deberías poder ver un ejemplo para la configuración de las variables```
 
     3.1: En el caso de no poder visualizar el archivo tu .env debería lucir de esta manera 
     ```env
