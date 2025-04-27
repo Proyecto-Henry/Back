@@ -22,7 +22,6 @@ export class SubscriptionsRepository {
       start_date: startSubscription,
       end_date: endSubscription,
       status: Status_Sub.TRIAL,
-      // external_subscription_id: '',
     });
 
     return newSubscription;

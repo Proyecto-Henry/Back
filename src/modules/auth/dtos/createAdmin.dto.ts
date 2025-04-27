@@ -13,23 +13,27 @@ import { CreateDateColumn } from 'typeorm';
 import { Status_Sub } from 'src/enums/status_sub.enum';
 
 export class createAdmin {
+  @IsNotEmpty()
   @IsString()
   name: string;
 
+  @IsNotEmpty()
   @IsString()
   password: string;
 
+  @IsNotEmpty()
   @IsEmail()
   email: string;
 
-  @IsNotEmpty()
+  @IsString()
   @IsOptional()
   phone: string;
 
-  @IsNotEmpty()
+  @IsString()
   @IsOptional()
   imgProfile?: string;
 
+  @IsString()
   @IsNotEmpty()
   country: Country;
 

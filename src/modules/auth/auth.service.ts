@@ -157,17 +157,19 @@ export class AuthService {
         'Parece que el pais ingresado no se encuentra almacenado',
       );
     }
-    const subscription = await this.subscriptionService.addTrialSubscription();
+    const subscription = this.subscriptionService.addTrialSubscription();
+    await this.subscriptionRepository.save(subscription);
     const newAdmin = {
       ...admin,
       status: Status_User.ACTIVE,
       google_id: undefined,
-      img_profile: admin.imgProfile || 'https://example.com/default-image.jpg',
+      phone: admin.phone,
       created_at: new Date(),
       country: existCountry,
       subscription,
     };
+    const saveAdmin = await this.adminRepository.save(newAdmin);
+    subscription.admin = saveAdmin
     await this.subscriptionRepository.save(subscription);
-    return this.adminRepository.save(newAdmin);
   }
 }
