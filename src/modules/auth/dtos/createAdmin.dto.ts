@@ -34,7 +34,7 @@ export class createAdmin {
   imgProfile?: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   country: Country;
 
   @IsOptional()
