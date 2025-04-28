@@ -20,6 +20,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { Role } from 'src/enums/roles.enum';
 import { User } from 'src/entities/User.entity';
 import { UsersService } from '../users/users.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
