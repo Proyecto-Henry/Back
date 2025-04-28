@@ -149,15 +149,15 @@ export class AuthService {
         'Ups!🫢 Ya tenemos un administrador registrado con dicho email',
       );
     }
-    const existCountry = await this.countryService.findCountry(
-      admin.country.name,
-    );
-    console.log(existCountry);
-    if (!existCountry) {
-      throw new BadRequestException(
-        'Parece que el pais ingresado no se encuentra almacenado',
-      );
-    }
+    // const existCountry = await this.countryService.findCountry(
+    //   admin.country.name,
+    // );
+    // console.log(existCountry);
+    // if (!existCountry) {
+    //   throw new BadRequestException(
+    //     'Parece que el pais ingresado no se encuentra almacenado',
+    //   );
+    // }
     const subscription = this.subscriptionService.addTrialSubscription();
     await this.subscriptionRepository.save(subscription);
     const newAdmin = {
@@ -166,11 +166,12 @@ export class AuthService {
       google_id: undefined,
       phone: admin.phone,
       created_at: new Date(),
-      country: existCountry,
+      // country: existCountry,
       subscription,
     };
     const saveAdmin = await this.adminRepository.save(newAdmin);
     subscription.admin = saveAdmin
     await this.subscriptionRepository.save(subscription);
+    return {message: "Usuario registrado con éxito"}
   }
 }

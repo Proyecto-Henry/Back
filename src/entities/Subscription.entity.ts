@@ -26,7 +26,7 @@ export class Subscription {
   @Column({ type: 'enum', enum: Status_Sub })
   status: Status_Sub;
   
-  @Column({ type: 'varchar', length: 255, nullable: false })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   external_subscription_id: string;
 
   @OneToOne(() => Admin, (admin) => admin.subscription)
