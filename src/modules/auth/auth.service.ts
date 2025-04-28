@@ -171,5 +171,6 @@ export class AuthService {
     const saveAdmin = await this.adminRepository.save(newAdmin);
     subscription.admin = saveAdmin
     await this.subscriptionRepository.save(subscription);
+    return {message: "Usuario registrado con éxito"}
   }
 }
