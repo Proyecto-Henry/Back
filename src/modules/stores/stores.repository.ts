@@ -2,9 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Store } from 'src/entities/Store.entity';
 import { Repository } from 'typeorm';
+import { uploadImageStoreDto } from './dtos/upload-image-store.dto';
 
 @Injectable()
 export class StoresRepository {
+  
   constructor(
     @InjectRepository(Store) private storesRepository: Repository<Store>,
   ) {}
@@ -36,4 +38,14 @@ export class StoresRepository {
     return stores
   }
 
+  async uploadImageStore(data: uploadImageStoreDto) {
+    const store = await this.storesRepository.findOneBy({id: data.store_id})
+    if(store) {
+      if (data.img_store !== undefined) {
+        store.img_store = data.img_store;
+        await this.storesRepository.save(store)
+        return {message: "Imagen cargada con éxito"}
+      }
+    }
+  }
 }
