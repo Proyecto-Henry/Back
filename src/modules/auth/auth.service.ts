@@ -103,6 +103,10 @@ export class AuthService {
   //     );
   //   }
   // }
+  
+  async signUp(signUpUser: SignUpAuthDto) {
+    return 'Usuario creado exitosamente';
+  }
 
   async login(loginUser: loginAuthDto) {
     let userOrAdmin: Admin | User | null;
@@ -118,7 +122,7 @@ export class AuthService {
       role = Role.USER;
     }
 
-    if (loginUser.password != userOrAdmin.password) {
+    if (await bcrypt.compare(userOrAdmin.password, loginUser.password)) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
@@ -137,18 +141,19 @@ export class AuthService {
     return response;
   }
 
-  async signUp(signUpUser: SignUpAuthDto) {
-    return 'Usuario creado exitosamente';
-  }
-
   //? REGISTRO ADMINISTRADOR
   async signUpAdmin(admin: createAdmin) {
     const existAdmin = await this.adminsService.getAdminByEmail(admin.email);
     if (existAdmin) {
       throw new BadRequestException(
-        'Ups!🫢 Ya tenemos un administrador registrado con dicho email',
+        'Ups!🫢 Ya tenemos un usuario registrado con dicho email',
       );
     }
+    const hashedPassword = await bcrypt.hash(admin.password, 10);
+    if (!hashedPassword)
+      throw new BadRequestException(
+        'Algo salio mal durante el proceso de registro. Por favor intente de nuevo',
+      );
     // const existCountry = await this.countryService.findCountry(
     //   admin.country.name,
     // );
@@ -159,19 +164,18 @@ export class AuthService {
     //   );
     // }
     const subscription = this.subscriptionService.addTrialSubscription();
-    await this.subscriptionRepository.save(subscription);
     const newAdmin = {
       ...admin,
+      password: hashedPassword,
       status: Status_User.ACTIVE,
-      google_id: undefined,
       phone: admin.phone,
       created_at: new Date(),
       // country: existCountry,
       subscription,
     };
     const saveAdmin = await this.adminRepository.save(newAdmin);
-    subscription.admin = saveAdmin
+    subscription.admin = saveAdmin;
     await this.subscriptionRepository.save(subscription);
-    return {message: "Usuario registrado con éxito"}
+    return { message: 'Usuario registrado con éxito' };
   }
 }
