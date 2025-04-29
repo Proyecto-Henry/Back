@@ -1,6 +1,7 @@
-import { Body, Controller, Get, HttpException, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, Param, Patch, Post, Put } from '@nestjs/common';
 import { AdminsService } from './admins.service';
 import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
+import { updateAdminDto } from './dtos/update-profile-admin.dto';
 
 @Controller('admins')
 export class AdminsController {
@@ -36,5 +37,10 @@ export class AdminsController {
   @Post('google')
   async createWithGoogle(@Body() data: CreateAdminWithGoogleDto) {
     return this.adminsService.createWithGoogle(data);
+  }
+
+  @Put(':admin_id')
+  updateProfileAdmin(@Body() data: updateAdminDto ){
+    return this.adminsService.updateProfileAdmin(data)
   }
 }
