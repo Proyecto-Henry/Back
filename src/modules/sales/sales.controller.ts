@@ -1,5 +1,6 @@
-import { Controller, Get, HttpException, Param } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, Param, Post } from '@nestjs/common';
 import { SalesService } from './sales.service';
+import { RegisterSaleDto } from './dtos/registerDate.dto';
 
 @Controller('sales')
 export class SalesController {
@@ -15,5 +16,10 @@ export class SalesController {
                     throw error;
                 }
             }
+    }
+
+    @Post()
+    registerSale(@Body() saleData: RegisterSaleDto) {
+        return this.salesService.registerSale(saleData)
     }
 }

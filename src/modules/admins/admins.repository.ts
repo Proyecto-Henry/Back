@@ -6,9 +6,11 @@ import { Country } from 'src/entities/Country.entity';
 import { Status_User } from 'src/enums/status_user.enum';
 import { DeepPartial, Repository } from 'typeorm';
 import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
+import { updateAdminDto } from './dtos/update-profile-admin.dto';
 
 @Injectable()
 export class AdminsRepository {
+  
   constructor(
     @InjectRepository(Admin) private adminsRepository: Repository<Admin>,
     @InjectRepository(Country) private countrysRepository: Repository<Country>,
@@ -33,7 +35,6 @@ export class AdminsRepository {
     const admin = await this.getAdminById(admin_id);
     admin.status = Status_User.INACTIVE;
     await this.adminsRepository.save(admin);
-    return admin;
   }
 
   async createWithGoogle(data: CreateAdminWithGoogleDto): Promise<Admin> {
@@ -50,5 +51,47 @@ export class AdminsRepository {
     } as DeepPartial<Admin>);
 
     return await this.adminsRepository.save(newAdmin);
+  }
+
+  async updateProfileAdmin(data: updateAdminDto) {
+    const admin = await this.adminsRepository.findOneBy({id: data.admin_id})
+    if(admin) {
+      Object.keys(data).forEach(key => {
+        admin[key] = data[key];
+      });
+      await this.adminsRepository.save(admin)
+      return {message: 'El perfil fue actualizado con éxito'}
+    }
+    
+  }
+
+  async getAdminsForSuperAdmin() {
+    const result = await this.adminsRepository.find({
+      relations: ['stores', 'subscription'],
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        stores: true,
+        subscription: {
+          id: true,
+          status: true,
+          start_date: true
+        }
+      }
+    })
+
+    const admins = result.map((admin) => ({
+      id: admin.id,
+      name: admin.name,
+      status: admin.status,
+      storesCount: admin.stores.length,
+      subscription: {
+        status: admin.subscription.status,
+        start_date: admin.subscription.start_date,
+      },
+    }))
+
+    return admins
   }
 }

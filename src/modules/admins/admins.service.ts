@@ -6,9 +6,11 @@ import { DeepPartial, Repository } from 'typeorm';
 import { Admin } from 'src/entities/Admin.entity';
 import { Status_User } from 'src/enums/status_user.enum';
 import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
+import { updateAdminDto } from './dtos/update-profile-admin.dto';
 
 @Injectable()
 export class AdminsService {
+  
   constructor(
     private readonly adminsRepository: AdminsRepository,
   ) {}
@@ -27,5 +29,13 @@ export class AdminsService {
 
   async createWithGoogle(data: CreateAdminWithGoogleDto): Promise<Admin> {
     return await this.adminsRepository.createWithGoogle(data);
+  }
+
+  updateProfileAdmin(data: updateAdminDto) {
+    return this.adminsRepository.updateProfileAdmin(data)
+  }
+
+  getAdminsForSuperAdmin() {
+    return this.adminsRepository.getAdminsForSuperAdmin()
   }
 }
