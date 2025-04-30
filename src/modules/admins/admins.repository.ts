@@ -46,7 +46,7 @@ export class AdminsRepository {
       status: Status_User.ACTIVE,
       created_at: new Date(),
       country: undefined, 
-      phone: undefined, // phone puede ser null
+      phone: undefined, 
     } as DeepPartial<Admin>);
 
     return await this.adminsRepository.save(newAdmin);
