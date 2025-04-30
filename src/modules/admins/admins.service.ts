@@ -34,4 +34,8 @@ export class AdminsService {
   updateProfileAdmin(data: updateAdminDto) {
     return this.adminsRepository.updateProfileAdmin(data)
   }
+
+  getAdminsForSuperAdmin() {
+    return this.adminsRepository.getAdminsForSuperAdmin()
+  }
 }

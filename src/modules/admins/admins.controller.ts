@@ -13,10 +13,7 @@ export class AdminsController {
       const admin = this.adminsService.getAdminById(admin_id);
       return admin;
     } catch (error) {
-      if (error instanceof HttpException) {
-        // Si es NotFoundException, lo relanzamos
         throw error;
-      }
     }
   }
 
@@ -28,9 +25,7 @@ export class AdminsController {
         message: 'Admin desactivado exitosamente',
       };
     } catch (error) {
-      if (error instanceof HttpException) {
         throw error;
-      }
     }
   }
 
@@ -42,5 +37,10 @@ export class AdminsController {
   @Put(':admin_id')
   updateProfileAdmin(@Body() data: updateAdminDto ){
     return this.adminsService.updateProfileAdmin(data)
+  }
+
+  @Get()
+  getAdminsForSuperAdmin() {
+    return this.adminsService.getAdminsForSuperAdmin()
   }
 }
