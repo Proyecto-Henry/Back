@@ -20,6 +20,8 @@ import { OAuth2Client } from 'google-auth-library';
 import { Role } from 'src/enums/roles.enum';
 import { User } from 'src/entities/User.entity';
 import { UsersService } from '../users/users.service';
+import * as bcrypt from 'bcrypt';
+import { MailService } from 'src/common/nodemailer.service';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +32,7 @@ export class AuthService {
     private readonly subscriptionService: SubscriptionsService,
     private readonly countryService: CountryService,
     private readonly usersService: UsersService,
+    private readonly mailService: MailService,
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
     @InjectRepository(Admin)
@@ -102,6 +105,10 @@ export class AuthService {
   //     );
   //   }
   // }
+  
+  async signUp(signUpUser: SignUpAuthDto) {
+    return 'Usuario creado exitosamente';
+  }
 
   async login(loginUser: loginAuthDto) {
     let userOrAdmin: Admin | User | null;
@@ -112,13 +119,13 @@ export class AuthService {
     else {
       userOrAdmin = await this.usersService.getUserByEmail(loginUser.email);
       if (!userOrAdmin) {
-        throw new UnauthorizedException('Credenciales inválidas');
+        throw new UnauthorizedException('❌Credenciales inválidas');
       }
       role = Role.USER;
     }
 
-    if (loginUser.password != userOrAdmin.password) {
-      throw new UnauthorizedException('Credenciales inválidas');
+    if (await bcrypt.compare(userOrAdmin.password, loginUser.password)) {
+      throw new UnauthorizedException('❌Credenciales inválidas');
     }
 
     const response = {
@@ -136,18 +143,19 @@ export class AuthService {
     return response;
   }
 
-  async signUp(signUpUser: SignUpAuthDto) {
-    return 'Usuario creado exitosamente';
-  }
-
   //? REGISTRO ADMINISTRADOR
   async signUpAdmin(admin: createAdmin) {
     const existAdmin = await this.adminsService.getAdminByEmail(admin.email);
     if (existAdmin) {
       throw new BadRequestException(
-        'Ups!🫢 Ya tenemos un administrador registrado con dicho email',
+        'Ups!🫢 Ya tenemos un usuario registrado con dicho email',
       );
     }
+    const hashedPassword = await bcrypt.hash(admin.password, 10);
+    if (!hashedPassword)
+      throw new BadRequestException(
+        'Algo salio mal durante el proceso de registro. Por favor intente de nuevo',
+      );
     // const existCountry = await this.countryService.findCountry(
     //   admin.country.name,
     // );
@@ -158,19 +166,19 @@ export class AuthService {
     //   );
     // }
     const subscription = this.subscriptionService.addTrialSubscription();
-    await this.subscriptionRepository.save(subscription);
     const newAdmin = {
       ...admin,
+      password: hashedPassword,
       status: Status_User.ACTIVE,
-      google_id: undefined,
       phone: admin.phone,
       created_at: new Date(),
       // country: existCountry,
       subscription,
     };
     const saveAdmin = await this.adminRepository.save(newAdmin);
-    subscription.admin = saveAdmin
+    subscription.admin = saveAdmin;
     await this.subscriptionRepository.save(subscription);
-    return {message: "Usuario registrado con éxito"}
+    await this.mailService.sendNotificationMail(newAdmin.email)
+    return { message: 'Usuario registrado con éxito, chequee su casilla de correo' };
   }
 }

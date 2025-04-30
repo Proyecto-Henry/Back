@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { loggerGlobal } from './middlewares/logger.middleware';
 import { CountriesSeed } from './seeds/countries/countries.seed';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,6 +13,25 @@ async function bootstrap() {
     credentials: true, // Si usas cookies o auth headers
   });
   app.use(loggerGlobal);
+  //!Controlador de errores personalizado
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      exceptionFactory: (errors) => {
+        const myErrors = errors.map((error) => {
+          return {
+            property: error.property,
+            constraints: error.constraints,
+          };
+        });
+        return new BadRequestException({
+          alert: 'Se detectaron los siguientes errores en la peticion:',
+          errors: myErrors,
+        });
+      },
+    }),
+  );
+  //!FIN DE CONTROLADOR DE ERRORES PERSONALIZADOS
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Sistema de Gestión y Ventas')
     .setDescription('Api construida con Nestjs')

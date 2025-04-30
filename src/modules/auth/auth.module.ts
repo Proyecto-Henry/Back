@@ -14,6 +14,7 @@ import { Subscription } from 'src/entities/Subscription.entity';
 import { SubscriptionsRepository } from '../subscriptions/subscriptions.repository';
 import { CountryService } from '../country/country.service';
 import { CountryRepository } from '../country/country.repository';
+import { MailService } from 'src/common/nodemailer.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Admin, User, Country, Subscription])],
@@ -27,6 +28,7 @@ import { CountryRepository } from '../country/country.repository';
     CountryRepository,
     SubscriptionsService,
     SubscriptionsRepository,
+    MailService,
   ],
   controllers: [AuthController],
   exports: [],
