@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Subscription } from 'src/entities/Subscription.entity';
 import { Plan } from 'src/enums/plan.enum';
@@ -25,5 +25,12 @@ export class SubscriptionsRepository {
     });
 
     return newSubscription;
+  }
+
+  async getSubscriptionByAdminId(adminId: string) {
+    return this.subscriptionsRepository.findOne({
+      where: { admin: { id: adminId } },
+
+    });
   }
 }

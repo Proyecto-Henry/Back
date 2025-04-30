@@ -4,10 +4,10 @@ import { CountryRepository } from './country.repository';
 @Injectable()
 export class CountryService {
   constructor(private readonly countryRepository: CountryRepository) {}
-  loadCountries() {
-    return this.countryRepository.loadCountry();
-  }
 
+  getCountries() {
+    return this.countryRepository.getCountries();
+  }
   findCountry(country: string) {
     return this.countryRepository.findCountry(country);
   }

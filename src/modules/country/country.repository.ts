@@ -12,29 +12,8 @@ export class CountryRepository {
     private readonly countryRepository: Repository<Country>,
   ) {}
 
-  async loadCountry() {
-    const filePath = path.join(__dirname, '../../..', 'src', 'countries.json');
-    console.log(filePath);
-
-    // Leer el archivo y parsear su contenido
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const countries = JSON.parse(fileContent);
-    console.log(countries);
-
-    for (const country of countries) {
-      const existsCountry = await this.countryRepository.findOne({
-        where: { name: country.name },
-      });
-
-      if (!existsCountry) {
-        const newCountry = this.countryRepository.create({
-          name: country.name,
-          phone_code: country.phone_code,
-        });
-        await this.countryRepository.save(newCountry);
-      }
-    }
-    return 'Paises agregados';
+  async getCountries() {
+    return await this.countryRepository.find();
   }
 
   async findCountry(country: string) {
