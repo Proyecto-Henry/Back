@@ -4,12 +4,16 @@ import { Subscription } from 'src/entities/Subscription.entity';
 import { Plan } from 'src/enums/plan.enum';
 import { Status_Sub } from 'src/enums/status_sub.enum';
 import { Repository } from 'typeorm';
+import { FullSubscriptionDto } from './dtos/full-subscription.dto';
+import { StripeService } from 'src/common/stripe.service';
 
 @Injectable()
 export class SubscriptionsRepository {
+  
   constructor(
     @InjectRepository(Subscription)
     private subscriptionsRepository: Repository<Subscription>,
+    private readonly stripeService: StripeService
   ) {}
 
   addTrialSubscription() {
@@ -25,5 +29,13 @@ export class SubscriptionsRepository {
     });
 
     return newSubscription;
+  }
+
+  createSubscription(data: FullSubscriptionDto) {
+    return this.stripeService.createSubscription(data)
+  }
+
+  canceledSubscription(subscription_id: string) {
+    return this.stripeService.canceledSubscription(subscription_id)
   }
 }

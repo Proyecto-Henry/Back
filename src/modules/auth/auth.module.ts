@@ -15,6 +15,7 @@ import { SubscriptionsRepository } from '../subscriptions/subscriptions.reposito
 import { CountryService } from '../country/country.service';
 import { CountryRepository } from '../country/country.repository';
 import { MailService } from 'src/common/nodemailer.service';
+import { StripeService } from 'src/common/stripe.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Admin, User, Country, Subscription])],
@@ -29,8 +30,9 @@ import { MailService } from 'src/common/nodemailer.service';
     SubscriptionsService,
     SubscriptionsRepository,
     MailService,
+    StripeService
   ],
   controllers: [AuthController],
-  exports: [],
+  exports: [AdminsService],
 })
 export class AuthModule {}
