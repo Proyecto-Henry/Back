@@ -21,6 +21,7 @@ import { Role } from 'src/enums/roles.enum';
 import { User } from 'src/entities/User.entity';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
+import { MailService } from 'src/common/nodemailer.service';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +32,7 @@ export class AuthService {
     private readonly subscriptionService: SubscriptionsService,
     private readonly countryService: CountryService,
     private readonly usersService: UsersService,
+    private readonly mailService: MailService,
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
     @InjectRepository(Admin)
@@ -117,13 +119,13 @@ export class AuthService {
     else {
       userOrAdmin = await this.usersService.getUserByEmail(loginUser.email);
       if (!userOrAdmin) {
-        throw new UnauthorizedException('Credenciales inválidas');
+        throw new UnauthorizedException('❌Credenciales inválidas');
       }
       role = Role.USER;
     }
 
     if (await bcrypt.compare(userOrAdmin.password, loginUser.password)) {
-      throw new UnauthorizedException('Credenciales inválidas');
+      throw new UnauthorizedException('❌Credenciales inválidas');
     }
 
     const response = {
@@ -176,6 +178,7 @@ export class AuthService {
     const saveAdmin = await this.adminRepository.save(newAdmin);
     subscription.admin = saveAdmin;
     await this.subscriptionRepository.save(subscription);
-    return { message: 'Usuario registrado con éxito' };
+    await this.mailService.sendNotificationMail(newAdmin.email)
+    return { message: 'Usuario registrado con éxito, chequee su casilla de correo' };
   }
 }
