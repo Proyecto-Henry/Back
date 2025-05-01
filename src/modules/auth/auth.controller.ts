@@ -1,9 +1,10 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpAuthDto } from './dtos/signup-auth.dto';
 import { loginAuthDto } from './dtos/signin-auth.dto';
 import { sign } from 'crypto';
 import { createAdmin } from './dtos/createAdmin.dto';
+import { payloadGoogle } from './dtos/signinGoogle.dto';
 
 class GoogleTokenDto {
   idToken: string;
@@ -29,6 +30,14 @@ export class AuthController {
     return this.authService.signUpAdmin(signUpAdmin);
   }
 
+  @Post('signinGoogle')
+  async signinGoogle(@Body() payload: payloadGoogle ) {
+    try {
+      return this.authService.signinGoogle(payload)
+    } catch (error) {
+      throw new InternalServerErrorException('Ocurrió un error inesperado. No se pudo autenticar');
+    }
+    }
   // @Post('signInAdmin')
   // signInAdmin(@Body() signInAdmin: AdminDto) {
   //   return this.authService.signInAdmin(signInAdmin);
