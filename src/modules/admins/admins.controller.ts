@@ -2,6 +2,8 @@ import { Body, Controller, Get, HttpException, Param, Patch, Post, Put } from '@
 import { AdminsService } from './admins.service';
 import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
 import { updateAdminDto } from './dtos/update-profile-admin.dto';
+import { CreateStoreDto } from '../stores/dtos/CreateStore.Dto';
+import { CreateStoreResponseDto } from '../stores/dtos/CreateStoreResponse.dto';
 
 @Controller('admins')
 export class AdminsController {
@@ -16,6 +18,7 @@ export class AdminsController {
         throw error;
     }
   }
+  
 
   @Patch(':admin_id')
   disableAdmin(@Param('admin_id') admin_id: string) {
@@ -37,6 +40,11 @@ export class AdminsController {
   @Put(':admin_id')
   updateProfileAdmin(@Body() data: updateAdminDto ){
     return this.adminsService.updateProfileAdmin(data)
+  }
+
+  @Post(":admin_id/createStore")
+  createStore(@Param("admin_id") adminId: string,@Body() data: CreateStoreDto): Promise<CreateStoreResponseDto> {
+    return this.adminsService.createStore(adminId, data)
   }
 
   @Get()

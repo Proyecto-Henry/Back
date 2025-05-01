@@ -9,11 +9,10 @@ import { StripeService } from 'src/common/stripe.service';
 
 @Injectable()
 export class SubscriptionsRepository {
-  
   constructor(
     @InjectRepository(Subscription)
     private subscriptionsRepository: Repository<Subscription>,
-    private readonly stripeService: StripeService
+    private readonly stripeService: StripeService,
   ) {}
 
   addTrialSubscription() {
@@ -31,19 +30,17 @@ export class SubscriptionsRepository {
     return newSubscription;
   }
 
-
   async getSubscriptionByAdminId(adminId: string) {
     return this.subscriptionsRepository.findOne({
       where: { admin: { id: adminId } },
-
+      relations: ['admin'],
     });
-
   }
   createSubscription(data: FullSubscriptionDto) {
-    return this.stripeService.createSubscription(data)
+    return this.stripeService.createSubscription(data);
   }
 
   canceledSubscription(subscription_id: string) {
-    return this.stripeService.canceledSubscription(subscription_id)
+    return this.stripeService.canceledSubscription(subscription_id);
   }
 }

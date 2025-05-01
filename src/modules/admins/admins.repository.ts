@@ -7,13 +7,17 @@ import { Status_User } from 'src/enums/status_user.enum';
 import { DeepPartial, Repository } from 'typeorm';
 import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
 import { updateAdminDto } from './dtos/update-profile-admin.dto';
+import { CreateStoreDto } from '../stores/dtos/CreateStore.Dto';
+import { Store } from 'src/entities/Store.entity';
+import { DataSource } from 'typeorm';
+import { CreateStoreResponseDto } from '../stores/dtos/CreateStoreResponse.dto';
 
 @Injectable()
 export class AdminsRepository {
-  
   constructor(
     @InjectRepository(Admin) private adminsRepository: Repository<Admin>,
     @InjectRepository(Country) private countrysRepository: Repository<Country>,
+    private dataSource: DataSource,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -41,28 +45,46 @@ export class AdminsRepository {
     const newAdmin = this.adminsRepository.create({
       name: `${data.firstname} ${data.lastname}`,
       email: data.email,
-      password: undefined, 
+      password: undefined,
       google_id: data.googleId,
       img_profile: data.picture || 'https://example.com/default-image.jpg',
       status: Status_User.ACTIVE,
       created_at: new Date(),
-      country: undefined, 
-      phone: undefined, 
+      country: undefined,
+      phone: undefined,
     } as DeepPartial<Admin>);
 
     return await this.adminsRepository.save(newAdmin);
   }
 
+  async createStore(adminId: string, data: CreateStoreDto): Promise<CreateStoreResponseDto> {
+    const admin = await this.adminsRepository.findOne({
+      where: { id: adminId },
+      relations: ['stores'],
+    });
+
+    if (!admin) {
+      throw new NotFoundException('No se encontro al administrador');
+    }
+
+    const createdStore = this.dataSource
+      .getRepository(Store)
+      .create({ ...data, admin });
+
+   await this.dataSource.getRepository(Store).save(createdStore);
+
+   return new CreateStoreResponseDto(createdStore)
+  }
+
   async updateProfileAdmin(data: updateAdminDto) {
-    const admin = await this.adminsRepository.findOneBy({id: data.admin_id})
-    if(admin) {
-      Object.keys(data).forEach(key => {
+    const admin = await this.adminsRepository.findOneBy({ id: data.admin_id });
+    if (admin) {
+      Object.keys(data).forEach((key) => {
         admin[key] = data[key];
       });
-      await this.adminsRepository.save(admin)
-      return {message: 'El perfil fue actualizado con éxito'}
+      await this.adminsRepository.save(admin);
+      return { message: 'El perfil fue actualizado con éxito' };
     }
-    
   }
 
   async getAdminsForSuperAdmin() {
@@ -76,10 +98,10 @@ export class AdminsRepository {
         subscription: {
           id: true,
           status: true,
-          start_date: true
-        }
-      }
-    })
+          start_date: true,
+        },
+      },
+    });
 
     const admins = result.map((admin) => ({
       id: admin.id,
@@ -90,8 +112,8 @@ export class AdminsRepository {
         status: admin.subscription.status,
         start_date: admin.subscription.start_date,
       },
-    }))
+    }));
 
-    return admins
+    return admins;
   }
 }
