@@ -41,7 +41,4 @@ export class AdminsService {
     return this.adminsRepository.getAdminsForSuperAdmin()
   }
 
-  signinGoogle(payload: payloadGoogle) {
-    return this.adminsRepository.signinGoogle(payload)
-  }
 }
