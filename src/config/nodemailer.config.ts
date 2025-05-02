@@ -4,13 +4,13 @@ import { config as dotenvConfig } from 'dotenv';
 dotenvConfig({ path: './.env.development' });
 
 export const transporter = nodemailer.createTransport({
-  //   host: 'smtp.gmail.email',
+    // host: process.env.MAIL_HOST,
   service: 'gmail',
-  port: 465,
-  secure: true,
+  port: 465,  //465 para gmail
+  secure: false, //false para 465
   auth: {
-    user: '4cristianm@gmail.com',
-    pass: 'aatq wliy mena muuk',
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
   },
   tls: {
     rejectUnauthorized: false,
@@ -18,5 +18,5 @@ export const transporter = nodemailer.createTransport({
 });
 
 transporter.verify().then(() => {
-  console.log('📨 Listo para enviar emails');
+  console.log('📩 Listo para enviar emails');
 });

@@ -1,19 +1,51 @@
 import { Injectable } from '@nestjs/common';
 import { transporter } from '../config/nodemailer.config';
+import { createAdmin } from 'src/modules/auth/dtos/createAdmin.dto';
 
-Injectable();
+@Injectable()
 export class MailService {
-  async sendNotificationMail(email: string) {
-    // send mail with defined transport object
-    const info = await transporter.sendMail({
-      from: '"Maddison Foo Koch 👻" <4cristianm@gmail.com>', // sender address
-      to: email, // list of receivers
-      subject: 'Hello ✔', // Subject line
-      text: 'Hello world?', // plain text body
-      html: '<b>Hello world?</b>', // html body
-    });
+  async sendNotificationMail(user: createAdmin, pass: string) {
+    const img =
+      'https://res.cloudinary.com/dtwxythux/image/upload/v1746139566/37da6594c977bf38c2aa11511ce359249c7fc531_kbk3m9.png';
+    try {
+      const info = await transporter.sendMail({
+        from: '"Safe Store 🛒" <no-responder@safestore.com>', // quien envian el correo
+        to: user.email, // quien lo recibe
+        subject: 'Cuenta creada con exito!', // asunto del mensaje
+        text: `Bienvenido ${user.name} a SafeStore`,
+        // cuerpo del mensaje
+        html: ` 
+          <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
+          <img src="${img}" alt="Logo de SafeStore" style="display: block; margin: 0 auto 20px auto; max-width: 150px;">
+          <h1 style="color: #2c3e50;">Gracias ${user.name} por registrarte en nuestra plataforma</h1>
+          
+          <p>Nos alegra tenerte con nosotros.</p>
+          
+          <p>
+          A partir de ahora, podrás acceder a <strong>SafeStore</strong> y gestionar tu inventario asi como ventas y disfrutar de todas nuestras funcionalidades.
+          </p>
+          
+          <p style="font-weight: bold; margin-bottom: 5px;">Tus credenciales de acceso:</p>
+          <ul style="list-style-type: none; padding-left: 0;">
+          <li><strong>Correo:</strong> ${user.email}</li>
+          <li><strong>Contraseña:</strong> ${pass}</li>
+          </ul>
+          
+          <p style="margin-top: 20px;">
+          ¡Bienvenido/a a <strong>SafeStore</strong>! Esperamos que disfrute de nuestros servicios.
+          </p>
+          
+          <p style="margin-top: 30px;">Atentamente,</p>
+          <p><strong>Equipo de Soporte</strong></p>
+          <p>SafeStore</p>
+          <p><a href="mailto:soporte@safestore.com" style="color: #3498db;">soporte@safestore.com</a></p>
+            </div>
+          `,
+      });
 
-    console.log('Message sent: %s', info.messageId);
-    // Message sent: <d786aa62-4e0a-070a-47ed-0b0666549519@ethereal.email>
+      console.log('📨 Mensaje enviado:', info.messageId);
+    } catch (error) {
+      console.log(`❌ Algo salio mal al enviar el mensaje: ${error}`)
+    }
   }
 }

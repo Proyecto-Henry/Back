@@ -178,7 +178,7 @@ export class AuthService {
     const saveAdmin = await this.adminRepository.save(newAdmin);
     subscription.admin = saveAdmin;
     await this.subscriptionRepository.save(subscription);
-    await this.mailService.sendNotificationMail(newAdmin.email)
+    await this.mailService.sendNotificationMail(newAdmin,admin.password)
     return { message: 'Usuario registrado con éxito, chequee su casilla de correo' };
   }
 }
