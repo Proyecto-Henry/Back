@@ -22,9 +22,11 @@ import { User } from 'src/entities/User.entity';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { MailService } from 'src/common/nodemailer.service';
+import { payloadGoogle } from './dtos/signinGoogle.dto';
 
 @Injectable()
 export class AuthService {
+  
   private googleClient: OAuth2Client;
   constructor(
     private readonly jwtService: JwtService,
@@ -180,5 +182,9 @@ export class AuthService {
     await this.subscriptionRepository.save(subscription);
     await this.mailService.sendNotificationMail(newAdmin,admin.password)
     return { message: 'Usuario registrado con éxito, chequee su casilla de correo' };
+  }
+
+  signinGoogle(payload: payloadGoogle) {
+    return this.adminsService.signinGoogle(payload)
   }
 }

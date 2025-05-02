@@ -7,6 +7,7 @@ import { Status_User } from 'src/enums/status_user.enum';
 import { DeepPartial, Repository } from 'typeorm';
 import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
 import { updateAdminDto } from './dtos/update-profile-admin.dto';
+import { payloadGoogle } from '../auth/dtos/signinGoogle.dto';
 
 @Injectable()
 export class AdminsRepository {
@@ -93,5 +94,34 @@ export class AdminsRepository {
     }))
 
     return admins
+  }
+
+  async signinGoogle(payload: payloadGoogle) {
+    const { googleId, name, email } = payload;
+    const admin = await this.adminsRepository.findOneBy({ email: email } );
+    if(!admin) {
+        const admin = this.adminsRepository.create({
+          name: name,
+          email: email,
+          google_id: googleId,
+          password: '', 
+          status: Status_User.ACTIVE,
+          created_at: new Date(),
+        });
+      const result = await this.adminsRepository.save(admin);
+      return {
+        message: 'Creación de usuario exitoso',
+        admin: result
+      }
+    } else if (googleId === admin.google_id){
+        return {
+          message: 'login exitoso',
+          admin: admin
+        }
+    } else {
+      return {
+        message: 'credenciales incorrectas'
+      }
+    }
   }
 }
