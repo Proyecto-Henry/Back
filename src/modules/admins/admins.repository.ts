@@ -34,8 +34,16 @@ export class AdminsRepository {
 
   async disableAdmin(admin_id: string) {
     const admin = await this.getAdminById(admin_id);
-    admin.status = Status_User.INACTIVE;
-    await this.adminsRepository.save(admin);
+    if (admin.status === Status_User.ACTIVE) {
+      admin.status = Status_User.INACTIVE;
+      await this.adminsRepository.save(admin);
+      return {message: 'Usuario desactivado con éxito'}
+    } else {
+      admin.status = Status_User.ACTIVE;
+      await this.adminsRepository.save(admin);
+      return {message: 'Usuario activado con éxito'}
+    }
+
   }
 
   async createWithGoogle(data: CreateAdminWithGoogleDto): Promise<Admin> {
