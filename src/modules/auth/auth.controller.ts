@@ -31,8 +31,10 @@ export class AuthController {
   }
 
   @Post('signinGoogle')
-  async signinGoogle(@Body() payload: payloadGoogle ) {
+  signinGoogle(@Body() payload: payloadGoogle ) {
     try {
+      console.log(payload);
+      
       return this.authService.signinGoogle(payload)
     } catch (error) {
       throw new InternalServerErrorException('Ocurrió un error inesperado. No se pudo autenticar');

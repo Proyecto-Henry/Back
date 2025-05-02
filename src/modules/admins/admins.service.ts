@@ -42,6 +42,6 @@ export class AdminsService {
   }
 
   signinGoogle(payload: payloadGoogle) {
-    this.adminsRepository.signinGoogle(payload)
+    return this.adminsRepository.signinGoogle(payload)
   }
 }

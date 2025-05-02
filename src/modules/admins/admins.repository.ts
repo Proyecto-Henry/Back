@@ -108,11 +108,19 @@ export class AdminsRepository {
           status: Status_User.ACTIVE,
           created_at: new Date(),
         });
-      await this.adminsRepository.save(admin);
+      const result = await this.adminsRepository.save(admin);
+      return {
+        message: 'Creación de usuario exitoso',
+        admin: result
+      }
+    } else if (googleId === admin.google_id){
+        return {
+          message: 'login exitoso',
+          admin: admin
+        }
     } else {
       return {
-        message: 'login exitoso',
-        admin: admin
+        message: 'credenciales incorrectas'
       }
     }
   }
