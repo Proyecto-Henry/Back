@@ -184,7 +184,32 @@ export class AuthService {
     return { message: 'Usuario registrado con éxito, chequee su casilla de correo' };
   }
 
-  signinGoogle(payload: payloadGoogle) {
-    return this.adminsService.signinGoogle(payload)
+  async signinGoogle(payload: payloadGoogle) {
+    const { googleId, name, email } = payload;
+    const admin = await this.adminsService.getAdminByEmail(email)
+    if(!admin) {
+        const subscription = this.subscriptionService.addTrialSubscription();
+        const admin = this.adminRepository.create({
+          name: name,
+          email: email,
+          google_id: googleId,
+          password: '', 
+          status: Status_User.ACTIVE,
+          created_at: new Date(),
+          subscription
+        });
+      const result = await this.adminRepository.save(admin);
+      subscription.admin = result
+      await this.subscriptionRepository.save(subscription);
+      await this.mailService.sendNotificationMail(admin, 'No ha registrado una password')
+      return { message: 'Usuario registrado con éxito, chequee su casilla de correo' };
+    } else if (googleId === admin.google_id){
+        return {
+          message: `✅Login exitoso! Bienvenido ${(admin as Admin).name}`,
+          user: admin
+        }
+    } else {
+      throw new UnauthorizedException('❌Credenciales inválidas');
+    }
   }
 }
