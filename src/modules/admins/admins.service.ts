@@ -8,9 +8,12 @@ import { Status_User } from 'src/enums/status_user.enum';
 import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
 import { updateAdminDto } from './dtos/update-profile-admin.dto';
 import { CreateStoreDto } from '../stores/dtos/CreateStore.Dto';
+import { payloadGoogle } from '../auth/dtos/signinGoogle.dto';
+
 
 @Injectable()
 export class AdminsService {
+  
   
   constructor(
     private readonly adminsRepository: AdminsRepository,
@@ -43,4 +46,5 @@ export class AdminsService {
   getAdminsForSuperAdmin() {
     return this.adminsRepository.getAdminsForSuperAdmin()
   }
+
 }

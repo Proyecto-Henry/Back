@@ -11,6 +11,7 @@ import { CreateStoreDto } from '../stores/dtos/CreateStore.Dto';
 import { Store } from 'src/entities/Store.entity';
 import { DataSource } from 'typeorm';
 import { CreateStoreResponseDto } from '../stores/dtos/CreateStoreResponse.dto';
+import { payloadGoogle } from '../auth/dtos/signinGoogle.dto';
 
 @Injectable()
 export class AdminsRepository {
@@ -37,8 +38,22 @@ export class AdminsRepository {
 
   async disableAdmin(admin_id: string) {
     const admin = await this.getAdminById(admin_id);
-    admin.status = Status_User.INACTIVE;
-    await this.adminsRepository.save(admin);
+    if (admin.status === Status_User.ACTIVE) {
+      admin.status = Status_User.INACTIVE;
+      const result = await this.adminsRepository.save(admin);
+      return {
+        message: 'Usuario desactivado con éxito',
+        status: result.status
+      }
+    } else {
+      admin.status = Status_User.ACTIVE;
+      const result = await this.adminsRepository.save(admin);
+      return {
+        message: 'Usuario activado con éxito',
+        status: result.status
+      }
+    }
+
   }
 
   async createWithGoogle(data: CreateAdminWithGoogleDto): Promise<Admin> {
@@ -93,6 +108,7 @@ export class AdminsRepository {
       select: {
         id: true,
         name: true,
+        email: true,
         status: true,
         stores: true,
         subscription: {
@@ -106,6 +122,7 @@ export class AdminsRepository {
     const admins = result.map((admin) => ({
       id: admin.id,
       name: admin.name,
+      email: admin.email,
       status: admin.status,
       storesCount: admin.stores.length,
       subscription: {
@@ -116,4 +133,5 @@ export class AdminsRepository {
 
     return admins;
   }
+
 }

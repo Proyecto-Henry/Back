@@ -23,10 +23,7 @@ export class AdminsController {
   @Patch(':admin_id')
   disableAdmin(@Param('admin_id') admin_id: string) {
     try {
-      this.adminsService.disableAdmin(admin_id);
-      return {
-        message: 'Admin desactivado exitosamente',
-      };
+      return this.adminsService.disableAdmin(admin_id);
     } catch (error) {
         throw error;
     }
