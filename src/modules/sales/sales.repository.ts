@@ -61,4 +61,12 @@ export class SalesRepository {
     
   }
 
+  async deleteSale(saleId: string): Promise<void> {
+    const result = await this.salesRepository.delete(saleId);
+
+    if (result.affected === 0) {
+      throw new Error('Venta no encontrada o ya fue eliminada');
+    }
+
+}
 }

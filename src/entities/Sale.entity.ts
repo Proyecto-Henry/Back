@@ -14,7 +14,7 @@ export class Sale {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ nullable: true })
   date: Date;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })

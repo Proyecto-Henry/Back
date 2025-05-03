@@ -4,6 +4,7 @@ import { RegisterSaleDto } from './dtos/registerDate.dto';
 
 @Injectable()
 export class SalesService {
+  
   constructor(private readonly salesRepository: SalesRepository) {}
 
   GetSalesByStoreId(store_id: string) {
@@ -13,4 +14,8 @@ export class SalesService {
   registerSale(saleData: RegisterSaleDto) {
     return this.salesRepository.registerSale(saleData)
   }
+
+  DeleteSalesByServicesId(saleData: string) {
+    return this.salesRepository.deleteSale(saleData)
+}
 }

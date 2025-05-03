@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/User.entity';
+import { Status_User } from 'src/enums/status_user.enum';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -15,6 +16,15 @@ export class UsersService {
 
   async getUserByEmail(email: string) {
     return this.usersRepository.findOne({ where: { email: email } });
+  }
 
+  async disableUser(user_id: string) {
+    const user = await this.usersRepository.findOneBy({ id: user_id });
+    if (!user) {
+      throw new NotFoundException('User no encontrado');
+    }
+    user.status = Status_User.INACTIVE;
+
+    await this.usersRepository.save(user);
   }
 }
