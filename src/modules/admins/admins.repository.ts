@@ -36,12 +36,18 @@ export class AdminsRepository {
     const admin = await this.getAdminById(admin_id);
     if (admin.status === Status_User.ACTIVE) {
       admin.status = Status_User.INACTIVE;
-      await this.adminsRepository.save(admin);
-      return {message: 'Usuario desactivado con éxito'}
+      const result = await this.adminsRepository.save(admin);
+      return {
+        message: 'Usuario desactivado con éxito',
+        status: result.status
+      }
     } else {
       admin.status = Status_User.ACTIVE;
-      await this.adminsRepository.save(admin);
-      return {message: 'Usuario activado con éxito'}
+      const result = await this.adminsRepository.save(admin);
+      return {
+        message: 'Usuario activado con éxito',
+        status: result.status
+      }
     }
 
   }
