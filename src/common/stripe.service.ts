@@ -31,63 +31,104 @@ import { Repository } from 'typeorm';
 
   
     async createSubscription(data: FullSubscriptionDto) {
-        //Crear cliente
-        const customer = await this.stripe.customers.create({ email: data.customer.email, name: data.customer.name });
-        //return customer;
-        //Crear plan
-        const plan = await this.stripe.plans.create({
+
+        const queryRunner = this.subscriptionsRepository.manager.connection.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        let customer: Stripe.Customer | undefined;
+        let plan: Stripe.Plan | undefined;
+        let stripeSubscription: Stripe.Response<Stripe.Subscription> | undefined;
+
+        try {
+          //Crear cliente
+          const customer = await this.stripe.customers.create({ email: data.customer.email, name: data.customer.name });
+
+          const plan = await this.stripe.plans.create({
             amount: data.plan.amount * 100, // Convertir a centavos
             currency: 'usd',
             interval: data.plan.interval, // 'month'
             product: { name: data.plan.name },
           });
-        //return plan;
-        //Crear suscripción
 
-        // Paso 1: Adjuntar método de pago al cliente
-    await this.stripe.paymentMethods.attach(data.subscription.paymentMethod, {
-        customer: data.subscription.customerId,
-      });
-  
-      // Paso 2: Configurar como predeterminado
-      await this.stripe.customers.update(data.subscription.customerId, {
-        invoice_settings: {
-          default_payment_method: data.subscription.paymentMethod,
-        },
-      });
-  
-    // Paso 3: Crear la suscripción
-    const stripeSubscription = await this.stripe.subscriptions.create({
-      customer: data.subscription.customerId,
-      items: [{ plan: data.subscription.planId }],
-      // default_payment_method: paymentMethod, // opcional ahora
-    });
-      
-    const admin = await this.adminsService.getAdminByEmail(data.customer.email)
-    if (admin) {
-        const subscription = this.subscriptionsRepository.create({
+          // Paso 2: Configurar como predeterminado
+          await this.stripe.customers.update(data.subscription.customerId, {
+            invoice_settings: {
+              default_payment_method: data.subscription.paymentMethod,
+            },
+          });
+
+          // Paso 3: Crear la suscripción
+          const stripeSubscription = await this.stripe.subscriptions.create({
+          customer: data.subscription.customerId,
+          items: [{ plan: data.subscription.planId }],
+          // default_payment_method: paymentMethod, // opcional ahora
+          });
+
+          const admin = await this.adminsService.getAdminByEmail(data.customer.email)
+          if (admin) {
+          const subscription = this.subscriptionsRepository.create({
             plan: data.subscription.plan, // Ajustar según el plan
             start_date: new Date(),
             end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Ejemplo: 1 mes
             status: Status_Sub.ACTIVE,
             external_subscription_id: stripeSubscription.id,
             admin: admin // Ajusta según el usuario autenticado
-        });
+          });
             
-        await this.subscriptionsRepository.save(subscription);
-        //return savedSubscription
-    }
+          await queryRunner.manager.save(subscription);
+          await queryRunner.commitTransaction();
+          }
+        } catch (error) {
+          await queryRunner.rollbackTransaction();
+          //Limpieza en Stripe si algo salió mal
+          
+            if (stripeSubscription) {
+              await this.stripe.subscriptions.cancel(stripeSubscription.id);
+            }
+            if (plan) {
+              await this.stripe.plans.del(plan.id);
+            }
+            if (customer) {
+              await this.stripe.customers.del(customer.id);
+            }
+          
+
+          throw new Error('Error al crear la suscripción');
+        } finally {
+          await queryRunner.release();
+        }
     }
 
     async canceledSubscription(subscription_id: string) {
-      await this.stripe.subscriptions.update(subscription_id, {
-        cancel_at_period_end: true,
-      })
+      const queryRunner = this.subscriptionsRepository.manager.connection.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
 
-      const subscription = await this.subscriptionsRepository.findOneBy({external_subscription_id: subscription_id})
-      if(subscription) {
-        subscription.status = Status_Sub.CANCELLED
-        await this.subscriptionsRepository.save(subscription)
+      try {
+        await this.stripe.subscriptions.update(subscription_id, {
+          cancel_at_period_end: true,
+        })
+
+        const subscription = await queryRunner.manager.findOneBy(Subscription, {
+          external_subscription_id: subscription_id,
+        });
+
+        if(subscription) {
+          subscription.status = Status_Sub.CANCELLED
+          await queryRunner.manager.save(subscription);
+        }
+
+        await queryRunner.commitTransaction();
+      } catch (error) {
+        // revertir el cambio en Stripe (eliminando la cancelación programada)
+        await this.stripe.subscriptions.update(subscription_id, {
+          cancel_at_period_end: false,
+        });
+        await queryRunner.rollbackTransaction();
+        throw new Error('No se pudo cancelar la suscripción correctamente');
+      } finally {
+        await queryRunner.release();
       }
     }
 
@@ -118,8 +159,13 @@ import { Repository } from 'typeorm';
         default_payment_method: defaultPaymentMethod,
       });
 
-      // 4. Guardar en la base de datos
-      const admin = await this.adminsService.getAdminByEmail(data.email);
+      // 4. Guardar en la base de datos con transacción
+      const queryRunner = this.subscriptionsRepository.manager.connection.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction()
+
+      try {
+        const admin = await this.adminsService.getAdminByEmail(data.email);
 
       if (admin) {
         const subscription = this.subscriptionsRepository.create({
@@ -131,30 +177,71 @@ import { Repository } from 'typeorm';
           admin,
         });
 
-        await this.subscriptionsRepository.save(subscription);
+        await queryRunner.manager.save(subscription);
+        await queryRunner.commitTransaction();
       }
-
-      // return newSubscription;
+      } catch (error) {
+        await queryRunner.rollbackTransaction();
+        //Revertir en Stripe si falló la base de datos
+        await this.stripe.subscriptions.update(newSubscription.id, {
+          cancel_at: Math.floor(Date.now() / 1000), // ahora
+        });
+        throw new Error('Error al guardar la suscripción en la base de datos.');
+      } finally {
+        await queryRunner.release();
+      }
     }
 
     async changePlan(data: changePlanDto) {
-      await this.stripe.subscriptions.update(data.subscription_id, {
-        items: [{
-          id: await this.getSubscriptionItemId(data.subscription_id),
-          price: data.planId,
-        }],
-        proration_behavior: 'create_prorations', // se puede cambiar a 'none'
-      })
+      const queryRunner = this.subscriptionsRepository.manager.connection.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
 
-      const subscription = await this.subscriptionsRepository.findOneBy({external_subscription_id: data.subscription_id})
-      if(subscription) {
-        subscription.plan = data.planId
-        await this.subscriptionsRepository.save(subscription)
+      let itemId: string | undefined;
+      let oldPriceId: string | undefined;
+
+
+      try {
+        // 1. Obtener info previa para posible rollback
+        const subscriptionStripe = await this.stripe.subscriptions.retrieve(data.subscription_id);
+        itemId = subscriptionStripe.items.data[0].id;
+        oldPriceId = subscriptionStripe.items.data[0].price.id;
+
+        await this.stripe.subscriptions.update(data.subscription_id, {
+          items: [{
+            id: itemId,
+            price: data.planId,
+          }],
+          proration_behavior: 'create_prorations', // se puede cambiar a 'none'
+        })
+  
+        const subscription = await queryRunner.manager.findOneBy(Subscription, {
+          external_subscription_id: data.subscription_id,
+        })
+
+        if(subscription) {
+          subscription.plan = data.planId
+          await queryRunner.manager.save(subscription);
+        }
+
+        await queryRunner.commitTransaction();
+      } catch (error) {
+        await queryRunner.rollbackTransaction();
+        // 4. Revertir en Stripe
+
+        if (itemId && oldPriceId) {
+          await this.stripe.subscriptions.update(data.subscription_id, {
+            items: [{
+              id: itemId,
+              price: oldPriceId,
+            }],
+            proration_behavior: 'none', // opcional: sin cargo extra al revertir
+          });
+        }
+
+        throw new Error('No se pudo cambiar el plan, se realizó rollback.');
+      } finally {
+        await queryRunner.release();
       }
-    }
-
-    private async getSubscriptionItemId(subscription_id: string): Promise<string> {
-      const subscription = await this.stripe.subscriptions.retrieve(subscription_id);
-      return subscription.items.data[0].id;
     }
 }
