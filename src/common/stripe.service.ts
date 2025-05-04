@@ -4,8 +4,7 @@ import { Subscription } from 'src/entities/Subscription.entity';
 import { Status_Sub } from 'src/enums/status_sub.enum';
 import { AdminsService } from 'src/modules/admins/admins.service';
 import { changePlanDto } from 'src/modules/subscriptions/dtos/change-plan.dto';
-import { FullSubscriptionDto } from 'src/modules/subscriptions/dtos/full-subscription.dto';
-import { reactivateSubscriptionDto } from 'src/modules/subscriptions/dtos/reactivate-subscription.dto';
+import { createSubscriptionDto } from 'src/modules/subscriptions/dtos/create-subscription.dto';
 import Stripe from 'stripe';
 import { Repository } from 'typeorm';
 
@@ -30,75 +29,122 @@ import { Repository } from 'typeorm';
       }
 
   
-    async createSubscription(data: FullSubscriptionDto) {
-
+      async createSubscription(data: createSubscriptionDto) {
         const queryRunner = this.subscriptionsRepository.manager.connection.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
-
+        
         let customer: Stripe.Customer | undefined;
         let plan: Stripe.Plan | undefined;
-        let stripeSubscription: Stripe.Response<Stripe.Subscription> | undefined;
-
+        let product: Stripe.Product | undefined;
+        let stripeSubscription: Stripe.Subscription | undefined;
+      
         try {
-          //Crear cliente
-          const customer = await this.stripe.customers.create({ email: data.customer.email, name: data.customer.name });
-
-          const plan = await this.stripe.plans.create({
-            amount: data.plan.amount * 100, // Convertir a centavos
-            currency: 'usd',
-            interval: data.plan.interval, // 'month'
-            product: { name: data.plan.name },
+          // 1. Crear cliente
+          console.log('🔄 Creando cliente en Stripe...');
+          customer = await this.stripe.customers.create({
+            email: data.customer.email,
+            name: data.customer.name,
           });
-
-          // Paso 2: Configurar como predeterminado
-          await this.stripe.customers.update(data.subscription.customerId, {
+          console.log('✅ Cliente creado en Stripe:', customer.id);
+      
+          // 2. Crear producto y plan
+          console.log('🔄 Creando producto en Stripe...');
+          product = await this.stripe.products.create({
+            name: data.plan.name,
+          });
+          console.log('✅ Producto creado en Stripe:', product.id);
+      
+          console.log('🔄 Creando plan en Stripe...');
+          plan = await this.stripe.plans.create({
+            amount: data.plan.amount * 100, // Stripe usa centavos
+            currency: 'usd',
+            interval: data.plan.interval,
+            product: product.id,
+          });
+          console.log('✅ Plan creado en Stripe:', plan.id);
+      
+          // 3. Adjuntar método de pago al cliente
+          console.log('🔄 Adjuntando método de pago al cliente...');
+          await this.stripe.paymentMethods.attach(data.subscription.paymentMethod, {
+            customer: customer.id,
+          });
+          console.log('✅ Método de pago adjuntado');
+      
+          // 4. Establecer método de pago como predeterminado
+          console.log('🔄 Estableciendo método de pago predeterminado...');
+          await this.stripe.customers.update(customer.id, {
             invoice_settings: {
               default_payment_method: data.subscription.paymentMethod,
             },
           });
-
-          // Paso 3: Crear la suscripción
-          const stripeSubscription = await this.stripe.subscriptions.create({
-          customer: data.subscription.customerId,
-          items: [{ plan: data.subscription.planId }],
-          // default_payment_method: paymentMethod, // opcional ahora
+          console.log('✅ Método de pago predeterminado asignado');
+      
+          // 5. Crear suscripción
+          console.log('🔄 Creando suscripción en Stripe...');
+          stripeSubscription = await this.stripe.subscriptions.create({
+            customer: customer.id,
+            items: [{ plan: plan.id }],
+            expand: ['latest_invoice']
+          });
+          console.log('✅ Suscripción creada en Stripe:', stripeSubscription.id);
+      
+          // 6. Guardar suscripción en la base de datos
+          console.log('🔄 Buscando admin con email:', data.customer.email);
+          const admin = await this.adminsService.getAdminByEmail(data.customer.email);
+          if (!admin) throw new Error('Admin no encontrado');
+          console.log('✅ Admin encontrado:', admin.id);
+          const subscription = await this.subscriptionsRepository.findOne({
+            where: { admin: { id: admin.id } },
+            relations: ['admin']
           });
 
-          const admin = await this.adminsService.getAdminByEmail(data.customer.email)
-          if (admin) {
-          const subscription = this.subscriptionsRepository.create({
-            plan: data.subscription.plan, // Ajustar según el plan
-            start_date: new Date(),
-            end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Ejemplo: 1 mes
-            status: Status_Sub.ACTIVE,
-            external_subscription_id: stripeSubscription.id,
-            admin: admin // Ajusta según el usuario autenticado
-          });
-            
+          if(subscription) {
+            subscription.plan = data.subscription.plan
+            subscription.start_date = new Date()
+            subscription.end_date = new Date(new Date().setMonth(new Date().getMonth() + 1))
+            subscription.status = Status_Sub.ACTIVE
+            subscription.external_subscription_id = stripeSubscription.id
+            subscription.external_subscription_item_id = stripeSubscription.items.data[0].id;
+            subscription.stripe_customer_id = customer.id;
+            subscription.stripe_plan_id = plan.id;
+          }
+          
           await queryRunner.manager.save(subscription);
           await queryRunner.commitTransaction();
-          }
+      
+          console.log('✅ Suscripción guardada en la base de datos:', subscription?.id);
+      
+          return { success: true, subscriptionId: stripeSubscription.id };
         } catch (error) {
           await queryRunner.rollbackTransaction();
-          //Limpieza en Stripe si algo salió mal
-          
-            if (stripeSubscription) {
-              await this.stripe.subscriptions.cancel(stripeSubscription.id);
-            }
-            if (plan) {
-              await this.stripe.plans.del(plan.id);
-            }
-            if (customer) {
-              await this.stripe.customers.del(customer.id);
-            }
-          
-
+      
+          // Limpieza si algo falló
+          if (stripeSubscription) {
+            await this.stripe.subscriptions.cancel(stripeSubscription.id).catch(() => null);
+            console.log('🔄 Suscripción cancelada en Stripe:', stripeSubscription.id);
+          }
+          if (plan) {
+            await this.stripe.plans.del(plan.id).catch(() => null);
+            console.log('🔄 Plan eliminado de Stripe:', plan.id);
+          }
+          if (product) {
+            await this.stripe.products.del(product.id).catch(() => null);
+            console.log('🔄 Producto eliminado de Stripe:', product.id);
+          }
+          if (customer) {
+            await this.stripe.customers.del(customer.id).catch(() => null);
+            console.log('🔄 Cliente eliminado de Stripe:', customer.id);
+          }
+      
+          console.error('❌ Error real en StripeService.createSubscription:', error);
           throw new Error('Error al crear la suscripción');
         } finally {
           await queryRunner.release();
         }
-    }
+      }
+      
+      
 
     async canceledSubscription(subscription_id: string) {
       const queryRunner = this.subscriptionsRepository.manager.connection.createQueryRunner();
@@ -106,90 +152,77 @@ import { Repository } from 'typeorm';
       await queryRunner.startTransaction();
 
       try {
+        console.log('🔄 Iniciando proceso de cancelación para:', subscription_id);
+        console.log('🔄 Marcando suscripción como cancelada al final del período en Stripe...');
         await this.stripe.subscriptions.update(subscription_id, {
           cancel_at_period_end: true,
         })
-
+        console.log('✅ Suscripción marcada para cancelar al final del período');
+        console.log('🔄 Buscando suscripción en base de datos...');
         const subscription = await queryRunner.manager.findOneBy(Subscription, {
           external_subscription_id: subscription_id,
         });
 
         if(subscription) {
+          console.log('✅ Suscripción encontrada:', subscription.id);
           subscription.status = Status_Sub.CANCELLED
+          console.log('🔄 Guardando estado CANCELLED en la base de datos...');
           await queryRunner.manager.save(subscription);
+          console.log('✅ Estado actualizado en la base de datos');
         }
 
         await queryRunner.commitTransaction();
+        console.log('✅ Transacción completada correctamente');
       } catch (error) {
+        console.error('❌ Error al cancelar suscripción:', error);
         // revertir el cambio en Stripe (eliminando la cancelación programada)
+        console.log('🔄 Revirtiendo cancelación programada en Stripe...');
         await this.stripe.subscriptions.update(subscription_id, {
           cancel_at_period_end: false,
         });
+        console.log('✅ Cancelación revertida');
         await queryRunner.rollbackTransaction();
+        console.log('🔄 Transacción revertida');
         throw new Error('No se pudo cancelar la suscripción correctamente');
       } finally {
         await queryRunner.release();
+        console.log('🔄 QueryRunner liberado');
       }
     }
 
-    async reactivateSubscription(data: reactivateSubscriptionDto) {
-      // 1. Obtener método de pago existente
-      const paymentMethods = await this.stripe.paymentMethods.list({
-        customer: data.customerId,
-        type: 'card',
-      });
-
-      if (!paymentMethods.data.length) {
-        throw new Error('No hay métodos de pago guardados.');
-      }
-
-      const defaultPaymentMethod = paymentMethods.data[0].id;
-
-      // 2. Asignar como método predeterminado
-      await this.stripe.customers.update(data.customerId, {
-        invoice_settings: {
-          default_payment_method: defaultPaymentMethod,
-        },
-      });
-
-      // 3. Crear nueva suscripción
-      const newSubscription = await this.stripe.subscriptions.create({
-        customer: data.customerId,
-        items: [{ price: data.planId }],
-        default_payment_method: defaultPaymentMethod,
-      });
-
-      // 4. Guardar en la base de datos con transacción
+    async reactivateSubscription(subscription_id: string) {
       const queryRunner = this.subscriptionsRepository.manager.connection.createQueryRunner();
       await queryRunner.connect();
-      await queryRunner.startTransaction()
+      await queryRunner.startTransaction();
 
       try {
-        const admin = await this.adminsService.getAdminByEmail(data.email);
+        console.log(`🔄 Reactivando suscripción con ID: ${subscription_id}...`);
+        // 1. Quitar cancelación programada en Stripe
+        const updatedSubscription = await this.stripe.subscriptions.update(subscription_id, {
+        cancel_at_period_end: false,
+      });
+      console.log(`✅ Cancelación eliminada en Stripe: ${updatedSubscription.id}`);
+      // 2. Buscar suscripción en la base de datos
+      const subscription = await queryRunner.manager.findOneBy(Subscription, {
+      external_subscription_id: subscription_id,
+      });
 
-      if (admin) {
-        const subscription = this.subscriptionsRepository.create({
-          plan: data.planId,
-          start_date: new Date(),
-          end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-          status: Status_Sub.ACTIVE,
-          external_subscription_id: newSubscription.id,
-          admin,
-        });
-
-        await queryRunner.manager.save(subscription);
-        await queryRunner.commitTransaction();
+      if(subscription) {
+        // 3. Actualizar estado en la base de datos
+      subscription.status = Status_Sub.ACTIVE;
+      await queryRunner.manager.save(subscription);
+      console.log(`💾 Estado actualizado a ACTIVE en la base de datos para la suscripción: ${subscription_id}`);
+      await queryRunner.commitTransaction();
+      console.log('✅ Suscripción reactivada con éxito.');
       }
       } catch (error) {
         await queryRunner.rollbackTransaction();
-        //Revertir en Stripe si falló la base de datos
-        await this.stripe.subscriptions.update(newSubscription.id, {
-          cancel_at: Math.floor(Date.now() / 1000), // ahora
-        });
-        throw new Error('Error al guardar la suscripción en la base de datos.');
+      console.error('❌ Error al reactivar la suscripción:', error.message);
+      throw new Error('No se pudo reactivar la suscripción correctamente');
       } finally {
         await queryRunner.release();
       }
+
     }
 
     async changePlan(data: changePlanDto) {
