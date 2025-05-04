@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { SubscriptionsRepository } from './subscriptions.repository';
 import { AdminsService } from '../admins/admins.service';
-import { FullSubscriptionDto } from './dtos/full-subscription.dto';
-import { reactivateSubscriptionDto } from './dtos/reactivate-subscription.dto';
 import { changePlanDto } from './dtos/change-plan.dto';
+import { createSubscriptionDto } from './dtos/create-subscription.dto';
 
 @Injectable()
 export class SubscriptionsService {
@@ -23,7 +22,7 @@ export class SubscriptionsService {
     return this.subscriptionsRepository.getSubscriptionByAdminId(admin_id)
 
   }
-  createSubscription(data: FullSubscriptionDto) {
+  createSubscription(data: createSubscriptionDto) {
     return this.subscriptionsRepository.createSubscription(data)
   }
 
@@ -31,8 +30,8 @@ export class SubscriptionsService {
     return this.subscriptionsRepository.canceledSubscription(subscription_id)
   }
 
-  reactivateSubscription(data: reactivateSubscriptionDto) {
-    return this.subscriptionsRepository.reactivateSubscription(data)
+  reactivateSubscription(subscription_id: string) {
+    return this.subscriptionsRepository.reactivateSubscription(subscription_id)
   }
 
   changePlan(data: changePlanDto) {

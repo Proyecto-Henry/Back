@@ -4,10 +4,9 @@ import { Subscription } from 'src/entities/Subscription.entity';
 import { Plan } from 'src/enums/plan.enum';
 import { Status_Sub } from 'src/enums/status_sub.enum';
 import { Repository } from 'typeorm';
-import { FullSubscriptionDto } from './dtos/full-subscription.dto';
 import { StripeService } from 'src/common/stripe.service';
-import { reactivateSubscriptionDto } from './dtos/reactivate-subscription.dto';
 import { changePlanDto } from './dtos/change-plan.dto';
+import { createSubscriptionDto } from './dtos/create-subscription.dto';
 
 @Injectable()
 export class SubscriptionsRepository {
@@ -41,7 +40,7 @@ export class SubscriptionsRepository {
     });
 
   }
-  createSubscription(data: FullSubscriptionDto) {
+  createSubscription(data: createSubscriptionDto) {
     return this.stripeService.createSubscription(data)
   }
 
@@ -49,8 +48,8 @@ export class SubscriptionsRepository {
     return this.stripeService.canceledSubscription(subscription_id)
   }
 
-  reactivateSubscription(data: reactivateSubscriptionDto) {
-    return this.stripeService.reactivateSubscription(data)
+  reactivateSubscription(subscription_id: string) {
+    return this.stripeService.reactivateSubscription(subscription_id)
   }
 
   changePlan(data: changePlanDto) {
