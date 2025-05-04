@@ -33,9 +33,6 @@ export class SignUpAuthDto {
 
   @IsNotEmpty()
   @IsString()
-  @Equals('password', {
-    message: 'Repetir contraseña debe ser igual a la contraseña',
-  })
   passwordConfirm: string;
 
   @MaxLength(30, {

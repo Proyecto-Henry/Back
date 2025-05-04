@@ -13,7 +13,7 @@ export class MailService {
         to: user.email, // quien lo recibe
         subject: 'Cuenta creada con exito!', // asunto del mensaje
         text: `Bienvenido ${user.name} a SafeStock`,
-        // cuerpo del mensaje
+        // cuerpo del mensajegit 
         html: ` 
           <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
           <img src="${img}" alt="Logo de SafeStock" style="display: block; margin: 0 auto 20px auto; max-width: 150px;">

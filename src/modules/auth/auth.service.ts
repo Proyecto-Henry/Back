@@ -26,7 +26,6 @@ import { payloadGoogle } from './dtos/signinGoogle.dto';
 
 @Injectable()
 export class AuthService {
-  
   private googleClient: OAuth2Client;
   constructor(
     private readonly jwtService: JwtService,
@@ -39,6 +38,7 @@ export class AuthService {
     private readonly subscriptionRepository: Repository<Subscription>,
     @InjectRepository(Admin)
     private readonly adminRepository: Repository<Admin>,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {
     this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   }
@@ -107,10 +107,6 @@ export class AuthService {
   //     );
   //   }
   // }
-  
-  async signUp(signUpUser: SignUpAuthDto) {
-    return 'Usuario creado exitosamente';
-  }
 
   async login(loginUser: loginAuthDto) {
     let userOrAdmin: Admin | User | null;
@@ -130,6 +126,13 @@ export class AuthService {
       throw new UnauthorizedException('❌Credenciales inválidas');
     }
 
+    const payload = {
+      id: userOrAdmin.id,
+      email: userOrAdmin.email,
+      status: userOrAdmin.status,
+    };
+    const token = this.jwtService.sign(payload);
+
     const response = {
       message:
         role === Role.ADMIN
@@ -142,10 +145,10 @@ export class AuthService {
       },
     };
 
-    return response;
+    return { response, token };
   }
 
-  //? REGISTRO ADMINISTRADOR
+  //TODO ADMINISTRADOR
   async signUpAdmin(admin: createAdmin) {
     const existAdmin = await this.adminsService.getAdminByEmail(admin.email);
     if (existAdmin) {
@@ -180,11 +183,34 @@ export class AuthService {
     const saveAdmin = await this.adminRepository.save(newAdmin);
     subscription.admin = saveAdmin;
     await this.subscriptionRepository.save(subscription);
-    await this.mailService.sendNotificationMail(newAdmin,admin.password)
-    return { message: 'Usuario registrado con éxito, chequee su casilla de correo' };
+    await this.mailService.sendNotificationMail(newAdmin, admin.password);
+    return {
+      message: 'Usuario registrado con éxito, chequee su casilla de correo',
+    };
+  }
+
+  //TODO REGISTRO DE USUARIO/VENDEDOR
+  async signUpUser(signUpUser: SignUpAuthDto, admin: any) {
+    const userAlreadyRegister = await this.usersService.getUserByEmail(
+      signUpUser.email,
+    );
+    if (userAlreadyRegister)
+      throw new BadRequestException(
+        'Parece que ya hay un usuario registrado con dicho email',
+      );
+    if (signUpUser.password != signUpUser.passwordConfirm)
+      throw new BadRequestException('Las contraseñas deben cohincidir');
+    const hashedPassword = await bcrypt.hash(signUpUser.password, 10);
+    const newUser = this.userRepository.create({
+      ...signUpUser,
+      password: hashedPassword,
+      admin: {id: admin.id},
+      status: Status_User.ACTIVE
+    });
+    await this.usersService.save(newUser)
   }
 
   signinGoogle(payload: payloadGoogle) {
-    return this.adminsService.signinGoogle(payload)
+    return this.adminsService.signinGoogle(payload);
   }
 }
