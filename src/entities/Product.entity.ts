@@ -20,7 +20,7 @@ export class Product {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
   price: number;
 
-  @Column({ type: 'int', nullable: false })
+  @Column({ type: 'int', nullable: false, default: 0})
   stock_min: number;
 
   @Column({ type: 'int', nullable: false })
