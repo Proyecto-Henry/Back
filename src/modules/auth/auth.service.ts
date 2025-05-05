@@ -139,19 +139,19 @@ export class AuthService {
     };
     const token = this.jwtService.sign(payload);
 
-    const response = {
+    return {
       message:
         role === Role.ADMIN
           ? `✅Login exitoso! Bienvenido ${(userOrAdmin as Admin).name}`
           : '✅Login exitoso! Bienvenido',
       user: {
+        name: (userOrAdmin as Admin).name,
         id: userOrAdmin.id,
         email: userOrAdmin.email,
         role: role,
       },
+      token
     };
-
-    return { response, token };
   }
 
   //TODO ADMINISTRADOR
