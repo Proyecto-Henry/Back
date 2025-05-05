@@ -1,5 +1,4 @@
 import {
-  Equals,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -31,12 +30,13 @@ export class SignUpAuthDto {
   @IsString()
   password: string;
 
+  // @IsNotEmpty()
+  // @IsString()
+  // passwordConfirm: string;
+
   @IsNotEmpty()
   @IsString()
-  @Equals('password', {
-    message: 'Repetir contraseña debe ser igual a la contraseña',
-  })
-  passwordConfirm: string;
+  address: string;
 
   @MaxLength(30, {
     message: 'El numero de celular no debe tener más de 30 caracteres.',

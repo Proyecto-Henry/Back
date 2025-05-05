@@ -24,7 +24,7 @@ export class User {
   @Column({ type: 'enum', enum: Status_User })
   status: Status_User;
 
-  @OneToOne(() => Store, (store) => store.user)
+  @OneToOne(() => Store, (store) => store.user, {nullable:true})
   @JoinColumn({ name: 'store_id' })
   store: Store;
 

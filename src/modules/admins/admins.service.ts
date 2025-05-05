@@ -16,7 +16,7 @@ export class AdminsService {
   constructor(
     private readonly adminsRepository: AdminsRepository,
   ) {}
-
+  
   async getAdminByEmail(email: string) {
     return this.adminsRepository.getAdminByEmail(email);
   }
@@ -25,20 +25,23 @@ export class AdminsService {
     return this.adminsRepository.getAdminById(admin_id);
   }
 
+  findAdminById(adminId: string) {
+    return this.adminsRepository.findAdminById(adminId);
+  }
+  
   disableAdmin(admin_id: string) {
     return this.adminsRepository.disableAdmin(admin_id);
   }
-
+  
   async createWithGoogle(data: CreateAdminWithGoogleDto): Promise<Admin> {
     return await this.adminsRepository.createWithGoogle(data);
   }
-
+  
   updateProfileAdmin(data: updateAdminDto) {
     return this.adminsRepository.updateProfileAdmin(data)
   }
-
+  
   getAdminsForSuperAdmin() {
     return this.adminsRepository.getAdminsForSuperAdmin()
   }
-
 }

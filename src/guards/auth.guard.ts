@@ -26,10 +26,9 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
-
       request['user'] = payload;
     } catch {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException('El token admin es requerido');
     }
     return true;
   }

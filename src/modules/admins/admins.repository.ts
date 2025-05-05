@@ -11,7 +11,6 @@ import { payloadGoogle } from '../auth/dtos/signinGoogle.dto';
 
 @Injectable()
 export class AdminsRepository {
-  
   constructor(
     @InjectRepository(Admin) private adminsRepository: Repository<Admin>,
     @InjectRepository(Country) private countrysRepository: Repository<Country>,
@@ -32,6 +31,18 @@ export class AdminsRepository {
     return admin;
   }
 
+  async findAdminById(adminId: string) {
+    try {
+      const admin = await this.adminsRepository.findOne({
+        where: { id: adminId },
+        relations: ['users'],
+      });
+      return admin;
+    } catch (error) {
+      return { message: 'admin no encontrado', error };
+    }
+  }
+
   async disableAdmin(admin_id: string) {
     const admin = await this.getAdminById(admin_id);
     if (admin.status === Status_User.ACTIVE) {
@@ -39,45 +50,43 @@ export class AdminsRepository {
       const result = await this.adminsRepository.save(admin);
       return {
         message: 'Usuario desactivado con éxito',
-        status: result.status
-      }
+        status: result.status,
+      };
     } else {
       admin.status = Status_User.ACTIVE;
       const result = await this.adminsRepository.save(admin);
       return {
         message: 'Usuario activado con éxito',
-        status: result.status
-      }
+        status: result.status,
+      };
     }
-
   }
 
   async createWithGoogle(data: CreateAdminWithGoogleDto): Promise<Admin> {
     const newAdmin = this.adminsRepository.create({
       name: `${data.firstname} ${data.lastname}`,
       email: data.email,
-      password: undefined, 
+      password: undefined,
       google_id: data.googleId,
       img_profile: data.picture || 'https://example.com/default-image.jpg',
       status: Status_User.ACTIVE,
       created_at: new Date(),
-      country: undefined, 
-      phone: undefined, 
+      country: undefined,
+      phone: undefined,
     } as DeepPartial<Admin>);
 
     return await this.adminsRepository.save(newAdmin);
   }
 
   async updateProfileAdmin(data: updateAdminDto) {
-    const admin = await this.adminsRepository.findOneBy({id: data.admin_id})
-    if(admin) {
-      Object.keys(data).forEach(key => {
+    const admin = await this.adminsRepository.findOneBy({ id: data.admin_id });
+    if (admin) {
+      Object.keys(data).forEach((key) => {
         admin[key] = data[key];
       });
-      await this.adminsRepository.save(admin)
-      return {message: 'El perfil fue actualizado con éxito'}
+      await this.adminsRepository.save(admin);
+      return { message: 'El perfil fue actualizado con éxito' };
     }
-    
   }
 
   async getAdminsForSuperAdmin() {
@@ -92,10 +101,10 @@ export class AdminsRepository {
         subscription: {
           id: true,
           status: true,
-          start_date: true
-        }
-      }
-    })
+          start_date: true,
+        },
+      },
+    });
 
     const admins = result.map((admin) => ({
       id: admin.id,
@@ -107,9 +116,8 @@ export class AdminsRepository {
         status: admin.subscription.status,
         start_date: admin.subscription.start_date,
       },
-    }))
+    }));
 
-    return admins
+    return admins;
   }
-
 }

@@ -1,10 +1,12 @@
-import { Controller, Post, Body, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, InternalServerErrorException, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpAuthDto } from './dtos/signup-auth.dto';
 import { loginAuthDto } from './dtos/signin-auth.dto';
 import { sign } from 'crypto';
 import { createAdmin } from './dtos/createAdmin.dto';
 import { payloadGoogle } from './dtos/signinGoogle.dto';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { Request } from 'express';
 
 class GoogleTokenDto {
   idToken: string;
@@ -19,15 +21,21 @@ export class AuthController {
     return this.authService.login(loginUser);
   }
 
-  @Post('signup')
-  async signUp(@Body() signUpUser: SignUpAuthDto) {
-    const newUser = await this.authService.signUp(signUpUser);
-    return this.authService.signUp(signUpUser);
-  }
-
   @Post('signUpAdmin')
   signUpAdmin(@Body() signUpAdmin: createAdmin) {
     return this.authService.signUpAdmin(signUpAdmin);
+  }
+  
+  @Post('signUpUser')
+  @UseGuards(AuthGuard)
+  async signUp(@Body() signUpUser: SignUpAuthDto, @Req() req: Request & { user: any }) {
+    //el endpoint signInStore crea la tienda y el usuario
+  }
+  
+  @Post('signUpStore')
+  @UseGuards(AuthGuard)
+  signInStore(@Body() userAndStore: SignUpAuthDto, @Req() req: Request & { user: any } ) {
+    return this.authService.buildStore(userAndStore, req);
   }
 
   @Post('signinGoogle')
