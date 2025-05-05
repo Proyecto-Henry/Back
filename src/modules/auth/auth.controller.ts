@@ -7,7 +7,6 @@ import { createAdmin } from './dtos/createAdmin.dto';
 import { payloadGoogle } from './dtos/signinGoogle.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Request } from 'express';
-import { storeDTO } from './dtos/signup.store.dto';
 
 class GoogleTokenDto {
   idToken: string;
@@ -22,20 +21,21 @@ export class AuthController {
     return this.authService.login(loginUser);
   }
 
-  @Post('signUpUser')
-  @UseGuards(AuthGuard)
-  async signUp(@Body() signUpUser: SignUpAuthDto, @Req() req: Request & { user: any }) {
-    return this.authService.signUpUser(signUpUser, req);
-  }
-
   @Post('signUpAdmin')
   signUpAdmin(@Body() signUpAdmin: createAdmin) {
     return this.authService.signUpAdmin(signUpAdmin);
   }
-
+  
+  @Post('signUpUser')
+  @UseGuards(AuthGuard)
+  async signUp(@Body() signUpUser: SignUpAuthDto, @Req() req: Request & { user: any }) {
+    //el endpoint signInStore crea la tienda y el usuario
+  }
+  
   @Post('signUpStore')
-  signInStore(@Body() signUpStore: storeDTO ) {
-    
+  @UseGuards(AuthGuard)
+  signInStore(@Body() userAndStore: SignUpAuthDto, @Req() req: Request & { user: any } ) {
+    return this.authService.buildStore(userAndStore, req);
   }
 
   @Post('signinGoogle')

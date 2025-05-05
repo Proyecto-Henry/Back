@@ -24,6 +24,10 @@ export class AdminsService {
   getAdminById(admin_id: string) {
     return this.adminsRepository.getAdminById(admin_id);
   }
+
+  findAdminById(adminId: string) {
+    return this.adminsRepository.findAdminById(adminId);
+  }
   
   disableAdmin(admin_id: string) {
     return this.adminsRepository.disableAdmin(admin_id);

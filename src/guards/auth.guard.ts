@@ -28,7 +28,7 @@ export class AuthGuard implements CanActivate {
       });
       request['user'] = payload;
     } catch {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException('El token admin es requerido');
     }
     return true;
   }

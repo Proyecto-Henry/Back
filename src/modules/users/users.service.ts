@@ -17,7 +17,7 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email: email } });
     
   }
-
+  
   async save(user: User) {
     return this.usersRepository.save(user);
   }
