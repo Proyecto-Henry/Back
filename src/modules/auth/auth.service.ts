@@ -189,7 +189,7 @@ export class AuthService {
     const saveAdmin = await this.adminRepository.save(newAdmin);
     subscription.admin = saveAdmin;
     await this.subscriptionRepository.save(subscription);
-    await this.mailService.sendNotificationMail(newAdmin, admin.password);
+    await this.mailService.sendNotificationMail(newAdmin.email, admin.password);
     return {
       message: 'Usuario registrado con éxito, chequee su casilla de correo',
     };
@@ -217,6 +217,10 @@ export class AuthService {
     });
     const usuario = await this.usersService.save(newUser);
     console.log('👦usuario creado: ', usuario);
+
+    // envio de notificacion por email
+    await this.mailService.sendNotificationMail(usuario.email,user.password)
+
     return usuario;
   }
 
@@ -275,7 +279,7 @@ export class AuthService {
       subscription.admin = result;
       await this.subscriptionRepository.save(subscription);
       await this.mailService.sendNotificationMail(
-        admin,
+        admin.email,
         'No ha registrado una password',
       );
       return {
