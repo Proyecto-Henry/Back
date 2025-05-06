@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Store } from 'src/entities/Store.entity';
 import { Repository } from 'typeorm';
 import { uploadImageStoreDto } from './dtos/upload-image-store.dto';
+import { SignUpAuthDto } from '../auth/dtos/signup-auth.dto';
 
 @Injectable()
 export class StoresRepository {
@@ -47,5 +48,17 @@ export class StoresRepository {
         return {message: "Imagen cargada con éxito"}
       }
     }
+  }
+
+  async findAddress(address: string) {
+    return this.storesRepository.findOne({
+      where: {
+        address: address
+      }
+    })
+  }
+
+  async save(store: SignUpAuthDto) {
+    return this.storesRepository.save(store);
   }
 }

@@ -16,9 +16,12 @@ import { CountryService } from '../country/country.service';
 import { CountryRepository } from '../country/country.repository';
 import { MailService } from 'src/common/nodemailer.service';
 import { StripeService } from 'src/common/stripe.service';
+import { StoresService } from '../stores/stores.service';
+import { StoresRepository } from '../stores/stores.repository';
+import { Store } from 'src/entities/Store.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Admin, User, Country, Subscription])],
+  imports: [TypeOrmModule.forFeature([Admin, User, Country, Subscription, Store])],
   providers: [
     AdminsService,
     AdminsRepository,
@@ -30,7 +33,9 @@ import { StripeService } from 'src/common/stripe.service';
     SubscriptionsService,
     SubscriptionsRepository,
     MailService,
-    StripeService
+    StripeService,
+    StoresService,
+    StoresRepository
   ],
   controllers: [AuthController],
   exports: [AdminsService],

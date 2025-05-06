@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { StoresRepository } from './stores.repository';
 import { uploadImageStoreDto } from './dtos/upload-image-store.dto';
+import { SignUpAuthDto } from '../auth/dtos/signup-auth.dto';
 
 @Injectable()
 export class StoresService {
@@ -17,5 +18,13 @@ export class StoresService {
 
   uploadImageStore(data: uploadImageStoreDto) {
     return this.storesRepository.uploadImageStore(data)
+  }
+
+  findAddress(address: string) {
+    return this.storesRepository.findAddress(address);
+  }
+
+  save(store: SignUpAuthDto) {
+    return this.storesRepository.save(store);
   }
 }
