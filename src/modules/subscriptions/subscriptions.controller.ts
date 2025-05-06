@@ -54,6 +54,8 @@ export class SubscriptionsController {
 
   @Post('changePlan')
   changePlan(@Body() data: changePlanDto){
+    console.log(data);
+    
     try {
       return this.subscriptionsService.changePlan(data)
     } catch (error) {

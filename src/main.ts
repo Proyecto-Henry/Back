@@ -8,7 +8,7 @@ import { BadRequestException, ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: 'http://localhost:3000', // Cambia esto por el origen de tu frontend
+    origin: 'http://localhost:5173', // Cambia esto por el origen de tu frontend
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Si usas cookies o auth headers
   });
