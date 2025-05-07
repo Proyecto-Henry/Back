@@ -128,7 +128,8 @@ export class AuthService {
       role = Role.USER;
     }
 
-    if (await bcrypt.compare(userOrAdmin.password, loginUser.password)) {
+    const validPassword = await bcrypt.compare(loginUser.password, userOrAdmin.password)
+    if (!validPassword) {
       throw new UnauthorizedException('❌Credenciales inválidas');
     }
 
@@ -136,6 +137,7 @@ export class AuthService {
       id: userOrAdmin.id,
       email: userOrAdmin.email,
       status: userOrAdmin.status,
+      role: role
     };
     const token = this.jwtService.sign(payload);
 
@@ -211,9 +213,9 @@ export class AuthService {
     const newUser = this.userRepository.create({
       ...user,
       password: hashedPassword,
-      admin: admin,
+      admin: admin, // administrador asociado al usuario
       status: Status_User.ACTIVE,
-      store: newStore,
+      store: newStore, // tienda que administrara
     });
     const usuario = await this.usersService.save(newUser);
     console.log('👦usuario creado: ', usuario);
