@@ -5,6 +5,7 @@ import { Sale_Detail } from 'src/entities/Sale_Detail.entity';
 import { Repository } from 'typeorm';
 import { ProductsService } from '../products/product.service';
 import { RegisterSaleDto } from './dtos/registerDate.dto';
+import { Product } from 'src/entities/Product.entity';
 
 @Injectable()
 export class SalesRepository {
@@ -46,8 +47,11 @@ export class SalesRepository {
     const sale = await this.salesRepository.save({
       date:saleData.date,
       total: total,
-      sale_details: sale_details,
-      store_id: saleData.store_id,
+      sale_details: sale_details.map((item) => ({
+        product: { id: item.product_id},
+        quantity: item.quantity
+      })),
+      store: { id: saleData.store_id}
     })
 
     // actualizamos el stock de los productos vendidos
@@ -58,15 +62,28 @@ export class SalesRepository {
         await this.productsService.updateProductStock(product.id, product.stock);
       }
     }
-    
+    return sale
   }
 
-  async deleteSale(saleId: string): Promise<void> {
-    const result = await this.salesRepository.delete(saleId);
+  async getSaleById(sale_id: string): Promise<Sale | null> {
+    return await this.salesRepository.findOne({
+      where: { id: sale_id },
+      relations: ['sale_details', "sale_details.product", 'store'], 
+    });
+  }
 
-    if (result.affected === 0) {
-      throw new Error('Venta no encontrada o ya fue eliminada');
-    }
+  async getAllSales(): Promise<Sale[]> {
+    return await this.salesRepository.find({
+      relations: ['sale_details', "sale_details.product", 'store'], 
+      order: { date: 'DESC' },
+    });
+  }
 
-}
+
+  async deleteSale(sale_id: string): Promise<number> {
+    const result = await this.salesRepository.delete(sale_id);
+    return result.affected ?? 0;
+  }
+
+
 }

@@ -20,6 +20,9 @@ export class Sale_Detail {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @ManyToOne(() => Sale, (sale) => sale.sale_details)
+  @ManyToOne(() => Sale, (sale) => sale.sale_details, {
+    onDelete: 'CASCADE', 
+  })
+  @JoinColumn({ name: 'sale_id' }) 
   sale: Sale;
 }

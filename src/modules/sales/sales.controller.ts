@@ -5,6 +5,7 @@ import {
   Get,
   HttpException,
   Param,
+  ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
@@ -14,8 +15,18 @@ import { RegisterSaleDto } from './dtos/registerDate.dto';
 export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
-  @Get('/:store_id')
-  GetSalesByStoreId(@Param(':store_id') store_id: string) {
+  @Get()
+  getAllSales() {
+    return this.salesService.getAllSales();
+  }
+
+  @Get(':sale_id')
+  getSaleById(@Param('sale_id', ParseUUIDPipe) sale_id: string) {
+    return this.salesService.getSaleById(sale_id);
+  }
+
+  @Get('/store/:store_id')
+  GetSalesByStoreId(@Param('store_id') store_id: string) {
     try {
       const sales = this.salesService.GetSalesByStoreId(store_id);
       return sales;
@@ -26,12 +37,14 @@ export class SalesController {
     }
   }
 
+  
+
   @Post()
   registerSale(@Body() saleData: RegisterSaleDto) {
     return this.salesService.registerSale(saleData);
   }
 
-  @Delete('/:store_id')
+  @Delete('/store/:store_id')
   DeleteSalesByStoreId(@Param(':store_id') store_id: string) {
     try {
       const sales = this.salesService.DeleteSalesByServicesId(store_id);
@@ -41,5 +54,10 @@ export class SalesController {
         throw error;
       }
     }
+  }
+
+  @Delete(':sale_id')
+  deleteSale(@Param('sale_id', ParseUUIDPipe) sale_id: string) {
+    return this.salesService.deleteSale(sale_id);
   }
 }
