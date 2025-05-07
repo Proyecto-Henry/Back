@@ -36,6 +36,18 @@ export class AdminsRepository {
     return admin;
   }
 
+  async findAdminById(adminId: string) {
+    try {
+      const admin = await this.adminsRepository.findOne({
+        where: { id: adminId },
+        relations: ['users'],
+      });
+      return admin;
+    } catch (error) {
+      return { message: 'admin no encontrado', error };
+    }
+  }
+
   async disableAdmin(admin_id: string) {
     const admin = await this.getAdminById(admin_id);
     if (admin.status === Status_User.ACTIVE) {
@@ -43,17 +55,16 @@ export class AdminsRepository {
       const result = await this.adminsRepository.save(admin);
       return {
         message: 'Usuario desactivado con éxito',
-        status: result.status
-      }
+        status: result.status,
+      };
     } else {
       admin.status = Status_User.ACTIVE;
       const result = await this.adminsRepository.save(admin);
       return {
         message: 'Usuario activado con éxito',
-        status: result.status
-      }
+        status: result.status,
+      };
     }
-
   }
 
   async createWithGoogle(data: CreateAdminWithGoogleDto): Promise<Admin> {
@@ -133,5 +144,4 @@ export class AdminsRepository {
 
     return admins;
   }
-
 }
