@@ -142,6 +142,11 @@ export class AuthService {
       },
     };
 
+
+    const user = {
+      id: userOrAdmin.id,
+      email: userOrAdmin.email
+    }
     return response;
   }
 
