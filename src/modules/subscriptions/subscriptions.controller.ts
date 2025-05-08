@@ -55,7 +55,8 @@ export class SubscriptionsController {
   @Post('changePlan')
   changePlan(@Body() data: changePlanDto){
     try {
-      return this.subscriptionsService.changePlan(data)
+      this.subscriptionsService.changePlan(data)
+      return { success: true, message: 'Cambio de plan exitoso.' };
     } catch (error) {
       throw new HttpException('Error al actualizar el plan. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }

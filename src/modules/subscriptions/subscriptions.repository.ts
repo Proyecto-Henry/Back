@@ -10,11 +10,10 @@ import { createSubscriptionDto } from './dtos/create-subscription.dto';
 
 @Injectable()
 export class SubscriptionsRepository {
-  
   constructor(
     @InjectRepository(Subscription)
     private subscriptionsRepository: Repository<Subscription>,
-    private readonly stripeService: StripeService
+    private readonly stripeService: StripeService,
   ) {}
 
   addTrialSubscription() {
@@ -32,21 +31,20 @@ export class SubscriptionsRepository {
     return newSubscription;
   }
 
-
   async getSubscriptionByAdminId(adminId: string) {
     return this.subscriptionsRepository.findOne({
       where: { admin: { id: adminId } },
-
+      relations: ['admin'],
     });
-
   }
   createSubscription(data: createSubscriptionDto) {
     return this.stripeService.createSubscription(data)
   }
 
   canceledSubscription(subscription_id: string) {
-    return this.stripeService.canceledSubscription(subscription_id)
+    return this.stripeService.canceledSubscription(subscription_id);
   }
+
 
   reactivateSubscription(subscription_id: string) {
     return this.stripeService.reactivateSubscription(subscription_id)
@@ -56,3 +54,7 @@ export class SubscriptionsRepository {
     return this.stripeService.changePlan(data)
   }
 }
+
+
+ 
+

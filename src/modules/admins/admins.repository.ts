@@ -7,6 +7,10 @@ import { Status_User } from 'src/enums/status_user.enum';
 import { DeepPartial, Repository } from 'typeorm';
 import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
 import { updateAdminDto } from './dtos/update-profile-admin.dto';
+import { CreateStoreDto } from '../stores/dtos/CreateStore.Dto';
+import { Store } from 'src/entities/Store.entity';
+import { DataSource } from 'typeorm';
+import { CreateStoreResponseDto } from '../stores/dtos/CreateStoreResponse.dto';
 import { payloadGoogle } from '../auth/dtos/signinGoogle.dto';
 
 @Injectable()
@@ -14,6 +18,7 @@ export class AdminsRepository {
   constructor(
     @InjectRepository(Admin) private adminsRepository: Repository<Admin>,
     @InjectRepository(Country) private countrysRepository: Repository<Country>,
+    private dataSource: DataSource,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -76,6 +81,25 @@ export class AdminsRepository {
     } as DeepPartial<Admin>);
 
     return await this.adminsRepository.save(newAdmin);
+  }
+
+  async createStore(adminId: string, data: CreateStoreDto): Promise<CreateStoreResponseDto> {
+    const admin = await this.adminsRepository.findOne({
+      where: { id: adminId },
+      relations: ['stores'],
+    });
+
+    if (!admin) {
+      throw new NotFoundException('No se encontro al administrador');
+    }
+
+    const createdStore = this.dataSource
+      .getRepository(Store)
+      .create({ ...data, admin });
+
+   await this.dataSource.getRepository(Store).save(createdStore);
+
+   return new CreateStoreResponseDto(createdStore)
   }
 
   async updateProfileAdmin(data: updateAdminDto) {

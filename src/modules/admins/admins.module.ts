@@ -6,9 +6,10 @@ import { AdminsService } from './admins.service';
 import { AdminsRepository } from './admins.repository';
 import { AdminsController } from './admins.controller';
 import { StripeService } from 'src/common/stripe.service';
+import { Store } from 'src/entities/Store.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Admin, Country])],
+  imports: [TypeOrmModule.forFeature([Admin, Country, Store])],
   providers: [AdminsService, AdminsRepository],
   controllers: [AdminsController],
   exports: [AdminsService],

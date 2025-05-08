@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Subscription } from 'src/entities/Subscription.entity';
+import { Plan } from 'src/enums/plan.enum';
 import { Status_Sub } from 'src/enums/status_sub.enum';
 import { AdminsService } from 'src/modules/admins/admins.service';
 import { changePlanDto } from 'src/modules/subscriptions/dtos/change-plan.dto';
@@ -217,8 +218,17 @@ import { Repository } from 'typeorm';
       }
       } catch (error) {
         await queryRunner.rollbackTransaction();
-      console.error('❌ Error al reactivar la suscripción:', error.message);
-      throw new Error('No se pudo reactivar la suscripción correctamente');
+        console.error('❌ Error al reactivar la suscripción:', error.message);
+        // Revertir el cambio en Stripe si falló la base de datos
+        try {
+          await this.stripe.subscriptions.update(subscription_id, {
+            cancel_at_period_end: true,
+          });
+          console.log(`↩️ Se restauró cancelación programada en Stripe: ${subscription_id}`);
+        } catch (stripeError) {
+          console.error('⚠️ No se pudo restaurar cancelación en Stripe:', stripeError.message);
+        }
+        throw new Error('No se pudo reactivar la suscripción correctamente');
       } finally {
         await queryRunner.release();
       }
@@ -229,52 +239,83 @@ import { Repository } from 'typeorm';
       const queryRunner = this.subscriptionsRepository.manager.connection.createQueryRunner();
       await queryRunner.connect();
       await queryRunner.startTransaction();
-
+    
       let itemId: string | undefined;
-      let oldPriceId: string | undefined;
-
-
+      let oldPlanId: string | undefined;
+      let product: Stripe.Product | undefined;
+      let newPlan: Stripe.Plan | undefined;
+    
       try {
-        // 1. Obtener info previa para posible rollback
         const subscriptionStripe = await this.stripe.subscriptions.retrieve(data.subscription_id);
         itemId = subscriptionStripe.items.data[0].id;
-        oldPriceId = subscriptionStripe.items.data[0].price.id;
-
+        oldPlanId = subscriptionStripe.items.data[0].plan.id;
+    
+        // 1. Crear nuevo producto y plan
+        console.log('🔨 Creando nuevo producto en Stripe con nombre:', data.planId);
+        product = await this.stripe.products.create({ name: data.planId });
+        console.log('✅ Producto creado en Stripe:', product.id);
+        console.log('🔄 Creando nuevo plan en Stripe con monto:', this.getAmountForPlan(data.planId));
+        newPlan = await this.stripe.plans.create({
+          amount: this.getAmountForPlan(data.planId) * 100,
+          currency: 'usd',
+          interval: 'month',
+          product: product.id,
+        });
+        console.log('✅ Nuevo plan creado en Stripe:', newPlan.id);
+        // 2. Actualizar suscripción con nuevo plan
+        console.log(`🔁 Actualizando suscripción ${data.subscription_id} con nuevo plan...`);
         await this.stripe.subscriptions.update(data.subscription_id, {
-          items: [{
-            id: itemId,
-            price: data.planId,
-          }],
-          proration_behavior: 'create_prorations', // se puede cambiar a 'none'
-        })
-  
+          items: [{ id: itemId, plan: newPlan.id }],
+          proration_behavior: 'create_prorations',
+        });
+        console.log('✅ Suscripción actualizada correctamente en Stripe.');
+        // 3. Actualizar en la base de datos
         const subscription = await queryRunner.manager.findOneBy(Subscription, {
           external_subscription_id: data.subscription_id,
-        })
-
-        if(subscription) {
-          subscription.plan = data.planId
+        });
+    
+        if (subscription) {
+          console.log('🔁 Actualizando suscripción en base de datos con nuevo plan:', data.planId);
+          subscription.plan = data.planId;
+          subscription.stripe_plan_id = newPlan.id;
           await queryRunner.manager.save(subscription);
+          console.log('✅ Suscripción actualizada en base de datos:', subscription.id);
         }
-
+    
         await queryRunner.commitTransaction();
+        console.log('✅ Transacción completada exitosamente.');
       } catch (error) {
+        console.error('❌ Error en el proceso de cambio de plan:', error)
         await queryRunner.rollbackTransaction();
-        // 4. Revertir en Stripe
-
-        if (itemId && oldPriceId) {
+        console.log('↩️ Transacción revertida.');
+        // Revertir en Stripe
+        if (itemId && oldPlanId) {
+          console.log('🔄 Revirtiendo cambio de plan en Stripe...');
           await this.stripe.subscriptions.update(data.subscription_id, {
-            items: [{
-              id: itemId,
-              price: oldPriceId,
-            }],
-            proration_behavior: 'none', // opcional: sin cargo extra al revertir
+            items: [{ id: itemId, plan: oldPlanId }],
+            proration_behavior: 'none',
           });
+          console.log('✅ Plan revertido al original en Stripe.');
         }
-
+    
         throw new Error('No se pudo cambiar el plan, se realizó rollback.');
       } finally {
         await queryRunner.release();
+        console.log('🔚 QueryRunner liberado.');
+      }
+    }
+    
+  
+    private getAmountForPlan(planLabel: string): number {
+      switch (planLabel) {
+        case '1 store':
+          return 10;
+        case '2 stores':
+          return 18;
+        case '4 stores':
+          return 30;
+        default:
+          throw new Error('Plan inválido');
       }
     }
 }

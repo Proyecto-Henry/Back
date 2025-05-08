@@ -7,7 +7,9 @@ import { Admin } from 'src/entities/Admin.entity';
 import { Status_User } from 'src/enums/status_user.enum';
 import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
 import { updateAdminDto } from './dtos/update-profile-admin.dto';
+import { CreateStoreDto } from '../stores/dtos/CreateStore.Dto';
 import { payloadGoogle } from '../auth/dtos/signinGoogle.dto';
+
 
 @Injectable()
 export class AdminsService {
@@ -36,7 +38,12 @@ export class AdminsService {
   async createWithGoogle(data: CreateAdminWithGoogleDto): Promise<Admin> {
     return await this.adminsRepository.createWithGoogle(data);
   }
-  
+
+  createStore(adminId: string, data: CreateStoreDto) {
+    return this.adminsRepository.createStore(adminId, data)
+  }
+
+
   updateProfileAdmin(data: updateAdminDto) {
     return this.adminsRepository.updateProfileAdmin(data)
   }

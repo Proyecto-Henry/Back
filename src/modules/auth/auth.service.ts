@@ -128,7 +128,10 @@ export class AuthService {
       role = Role.USER;
     }
 
-    const validPassword = await bcrypt.compare(loginUser.password, userOrAdmin.password)
+    const validPassword = await bcrypt.compare(
+      loginUser.password,
+      userOrAdmin.password,
+    );
     if (!validPassword) {
       throw new UnauthorizedException('❌Credenciales inválidas');
     }
@@ -137,23 +140,23 @@ export class AuthService {
       id: userOrAdmin.id,
       email: userOrAdmin.email,
       status: userOrAdmin.status,
-      role: role
+      role: role,
     };
     const token = this.jwtService.sign(payload);
 
-    return {
-      message:
-        role === Role.ADMIN
-          ? `✅Login exitoso! Bienvenido ${(userOrAdmin as Admin).name}`
-          : '✅Login exitoso! Bienvenido',
-      user: {
-        name: (userOrAdmin as Admin).name,
-        id: userOrAdmin.id,
-        email: userOrAdmin.email,
-        role: role,
-      },
-      token
+    const message =
+      role === Role.ADMIN
+        ? `✅Login exitoso! Bienvenido ${(userOrAdmin as Admin).name}`
+        : '✅Login exitoso! Bienvenido';
+
+    const user = {
+      name: (userOrAdmin as Admin).name,
+      id: userOrAdmin.id,
+      email: userOrAdmin.email,
+      role: role,
     };
+
+    return { message, token, user };
   }
 
   //TODO ADMINISTRADOR
@@ -221,7 +224,7 @@ export class AuthService {
     console.log('👦usuario creado: ', usuario);
 
     // envio de notificacion por email
-    await this.mailService.sendNotificationMail(usuario.email,user.password)
+    await this.mailService.sendNotificationMail(usuario.email, user.password);
 
     return usuario;
   }
@@ -286,6 +289,7 @@ export class AuthService {
       );
       return {
         message: 'Usuario registrado con éxito, chequee su casilla de correo',
+        user: admin,
       };
     } else if (googleId === admin.google_id) {
       return {
