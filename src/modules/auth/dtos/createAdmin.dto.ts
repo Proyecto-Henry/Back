@@ -16,10 +16,16 @@ import { Status_Sub } from 'src/enums/status_sub.enum';
 import { Transform } from 'class-transformer';
 
 export class createAdmin {
+  /**
+   * @example nombre
+   */
   @IsNotEmpty()
   @IsString()
   name: string;
 
+  /**
+   * @example Str0ngP@ssw0rd
+   */
   @IsNotEmpty()
   @IsString()
   @MinLength(8)
@@ -33,6 +39,9 @@ export class createAdmin {
   )
   password: string;
 
+  /**
+   * @example example@gmail.com
+   */
   @IsNotEmpty()
   @IsEmail()
   @Transform(({ value }) => value.trim().toLowerCase())

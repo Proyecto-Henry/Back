@@ -128,7 +128,11 @@ export class AuthService {
       role = Role.USER;
     }
 
-    if (await bcrypt.compare(userOrAdmin.password, loginUser.password)) {
+    const validPassword = await bcrypt.compare(
+      loginUser.password,
+      userOrAdmin.password,
+    );
+    if (!validPassword) {
       throw new UnauthorizedException('❌Credenciales inválidas');
     }
 
@@ -136,24 +140,23 @@ export class AuthService {
       id: userOrAdmin.id,
       email: userOrAdmin.email,
       status: userOrAdmin.status,
+      role: role,
     };
     const token = this.jwtService.sign(payload);
 
-    const response = {
-      message:
-        role === Role.ADMIN
-          ? `✅Login exitoso! Bienvenido ${(userOrAdmin as Admin).name}`
-          : '✅Login exitoso! Bienvenido',
-    };
+    const message =
+      role === Role.ADMIN
+        ? `✅Login exitoso! Bienvenido ${(userOrAdmin as Admin).name}`
+        : '✅Login exitoso! Bienvenido';
 
     const user = {
+      name: (userOrAdmin as Admin).name,
       id: userOrAdmin.id,
       email: userOrAdmin.email,
-      role: role
-    }
+      role: role,
+    };
 
-    return { response, token, user };
-
+    return { message, token, user };
   }
 
   //TODO ADMINISTRADOR
@@ -191,7 +194,7 @@ export class AuthService {
     const saveAdmin = await this.adminRepository.save(newAdmin);
     subscription.admin = saveAdmin;
     await this.subscriptionRepository.save(subscription);
-    await this.mailService.sendNotificationMail(newAdmin, admin.password);
+    await this.mailService.sendNotificationMail(newAdmin.email, admin.password);
     return {
       message: 'Usuario registrado con éxito, chequee su casilla de correo',
     };
@@ -213,12 +216,16 @@ export class AuthService {
     const newUser = this.userRepository.create({
       ...user,
       password: hashedPassword,
-      admin: admin,
+      admin: admin, // administrador asociado al usuario
       status: Status_User.ACTIVE,
-      store: newStore,
+      store: newStore, // tienda que administrara
     });
     const usuario = await this.usersService.save(newUser);
     console.log('👦usuario creado: ', usuario);
+
+    // envio de notificacion por email
+    await this.mailService.sendNotificationMail(usuario.email, user.password);
+
     return usuario;
   }
 
@@ -277,12 +284,12 @@ export class AuthService {
       subscription.admin = result;
       await this.subscriptionRepository.save(subscription);
       await this.mailService.sendNotificationMail(
-        admin,
+        admin.email,
         'No ha registrado una password',
       );
       return {
         message: 'Usuario registrado con éxito, chequee su casilla de correo',
-        user: admin
+        user: admin,
       };
     } else if (googleId === admin.google_id) {
       return {
