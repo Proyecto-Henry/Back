@@ -29,11 +29,40 @@ export class AdminsRepository {
   }
 
   async getAdminById(admin_id: string) {
-    const admin = await this.adminsRepository.findOneBy({ id: admin_id });
-    if (!admin) {
+    const result = await this.adminsRepository.findOne({
+      where: { id: admin_id },
+      relations: ['stores', 'subscription'],
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true,
+        stores: true,
+        subscription: {
+          id: true,
+          status: true,
+          start_date: true,
+        },
+      },
+    });
+
+
+    if (!result) {
       throw new NotFoundException('Admin no encontrado');
     }
-    return admin;
+
+    const admin = {
+      id: result.id,
+      name: result.name,
+      email: result.email,
+      status: result.status,
+      storesCount: result.stores.length,
+      subscription: {
+        status: result.subscription.status,
+        start_date: result.subscription.start_date,
+      },
+    };
+    return admin
   }
 
   async findAdminById(adminId: string) {

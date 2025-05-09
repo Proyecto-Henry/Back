@@ -261,8 +261,15 @@ export class AuthService {
 
     return {
       message: `👍 se registro su nueva tienda ${store.name}`,
-      store: store,
-      user: user,
+      store: {
+        id: store.id,
+        name: store.name,
+        address: store.address
+      },
+      user: {
+        id: user.id,
+        email: user.email
+      }
     };
   }
 
@@ -288,13 +295,18 @@ export class AuthService {
         'No ha registrado una password',
       );
       return {
-        message: 'Usuario registrado con éxito, chequee su casilla de correo',
-        user: admin,
+        message: 'Usuario registrado con éxito, chequee su casilla de correo'
       };
     } else if (googleId === admin.google_id) {
+      const user = {
+        name: admin.name,
+        id: admin.id,
+        email: admin.email,
+        role: Role.ADMIN
+      };
       return {
         message: `✅Login exitoso! Bienvenido ${(admin as Admin).name}`,
-        user: admin,
+        user: user,
       };
     } else {
       throw new UnauthorizedException('❌Credenciales inválidas');

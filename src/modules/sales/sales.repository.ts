@@ -17,13 +17,18 @@ export class SalesRepository {
   ) {}
 
   async GetSalesByStoreId(store_id: string) {
-    const sales = await this.salesRepository.findOne({
-      where: { id: store_id },
+    const sales = await this.salesRepository.find({
+      where: {
+        store: {
+          id: store_id,
+        },
+      },
       relations: {
-        sale_details: true 
-      }
+        sale_details: true,
+      },
     })
-    if(!sales) {
+
+    if(sales.length === 0 ) {
       throw new NotFoundException('Ventas no encontradas');
     }
     return sales
@@ -50,8 +55,7 @@ export class SalesRepository {
       sale_details: sale_details.map((item) => ({
         product: { id: item.product_id},
         quantity: item.quantity
-      })),
-      store: { id: saleData.store_id}
+      }))
     })
 
     // actualizamos el stock de los productos vendidos
@@ -68,7 +72,7 @@ export class SalesRepository {
   async getSaleById(sale_id: string): Promise<Sale | null> {
     return await this.salesRepository.findOne({
       where: { id: sale_id },
-      relations: ['sale_details', "sale_details.product", 'store'], 
+      relations: ['sale_details', "sale_details.product"], 
     });
   }
 
