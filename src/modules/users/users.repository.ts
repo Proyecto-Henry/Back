@@ -16,4 +16,8 @@ export class UsersRepository {
       where: { email },
     });
   }
+
+  async findUser(id: string) {
+    
+  }
 }

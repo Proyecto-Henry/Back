@@ -4,10 +4,20 @@ import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
 import { updateAdminDto } from './dtos/update-profile-admin.dto';
 import { CreateStoreDto } from '../stores/dtos/CreateStore.Dto';
 import { CreateStoreResponseDto } from '../stores/dtos/CreateStoreResponse.dto';
+import { UUID } from 'crypto';
 
 @Controller('admins')
 export class AdminsController {
   constructor(private readonly adminsService: AdminsService) {}
+
+  @Get('usersStores/:adminId')
+  getUsersStores(@Param('adminId') adminId: UUID) {
+    try {
+      return this.adminsService.usersStores(adminId);
+    } catch (error) {
+      throw error;
+    }
+  }
 
   @Get(':admin_id')
   getAdminById(@Param('admin_id') admin_id: string) {

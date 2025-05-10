@@ -21,6 +21,15 @@ export class AdminsRepository {
     private dataSource: DataSource,
     private readonly jwtService: JwtService,
   ) {}
+  
+  async usersStores(adminId: string) {
+    const existStore = await this.adminsRepository.find({
+      where: { stores: { id: adminId }},
+      relations: ["stores"]
+    });
+    
+    return existStore? existStore : "No tiene tiendas asociadas";
+  }
 
   async getAdminByEmail(email: string) {
     return await this.adminsRepository.findOne({

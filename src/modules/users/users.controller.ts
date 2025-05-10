@@ -1,5 +1,7 @@
-import { Controller, Param, Patch } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { UUID } from 'crypto';
+import { User } from 'src/entities/User.entity';
 
 @Controller('users')
 export class UsersController {
@@ -14,6 +16,15 @@ export class UsersController {
       };
     } catch (error) {
         throw error;
+    }
+  }
+
+  @Get(':id')
+  getUser(@Param('id', new ParseUUIDPipe()) id: UUID): Promise<User> {
+    try {
+      return this.usersService.findUser(id);
+    } catch (error) {
+      throw new NotFoundException(error.message)
     }
   }
 }

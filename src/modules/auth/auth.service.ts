@@ -249,9 +249,11 @@ export class AuthService {
       admin: admin,
       user: undefined,
     });
+
+    
     const store = await this.storesRepository.save(newStore);
     console.log('🏪store creada: ', store);
-
+    
     // creo el usuario
     const user = await this.signUpUser(userStore, admin, newStore);
 
@@ -284,8 +286,7 @@ export class AuthService {
       subscription.admin = result;
       await this.subscriptionRepository.save(subscription);
       await this.mailService.sendNotificationMail(
-        admin.email,
-        'No ha registrado una password',
+        admin.email
       );
       return {
         message: 'Usuario registrado con éxito, chequee su casilla de correo',
