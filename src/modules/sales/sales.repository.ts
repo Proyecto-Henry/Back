@@ -55,7 +55,8 @@ export class SalesRepository {
       sale_details: sale_details.map((item) => ({
         product: { id: item.product_id},
         quantity: item.quantity
-      }))
+      })),
+      store: { id: saleData.store_id}
     })
 
     // actualizamos el stock de los productos vendidos
