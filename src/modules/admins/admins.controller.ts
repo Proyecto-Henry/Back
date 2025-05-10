@@ -39,20 +39,20 @@ export class AdminsController {
     }
   }
 
-  @Post('google')
-  async createWithGoogle(@Body() data: CreateAdminWithGoogleDto) {
-    return this.adminsService.createWithGoogle(data);
-  }
+  // @Post('google')
+  // async createWithGoogle(@Body() data: CreateAdminWithGoogleDto) {
+  //   return this.adminsService.createWithGoogle(data);
+  // }
 
-  @Put(':admin_id')
+  @Put()
   updateProfileAdmin(@Body() data: updateAdminDto ){
     return this.adminsService.updateProfileAdmin(data)
   }
 
-  @Post(":admin_id/createStore")
-  createStore(@Param("admin_id") adminId: string,@Body() data: CreateStoreDto): Promise<CreateStoreResponseDto> {
-    return this.adminsService.createStore(adminId, data)
-  }
+  // @Post(":admin_id/createStore")
+  // createStore(@Param("admin_id") adminId: string,@Body() data: CreateStoreDto): Promise<CreateStoreResponseDto> {
+  //   return this.adminsService.createStore(adminId, data)
+  // }
 
   @Get()
   getAdminsForSuperAdmin() {

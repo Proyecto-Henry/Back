@@ -5,27 +5,23 @@ import { StoresService } from './stores.service';
 export class StoresController {
   constructor(private readonly storesService: StoresService) {}
 
-  @Get(':store_id')
-    getStoreAndProductsByStoreId (@Param(':store_id') store_id: string) {
+  @Get('store/:store_id')
+    getStoreAndProductsByStoreId (@Param('store_id') store_id: string) {
         try {
             const storeAndProducts = this.storesService.getStoreAndProductsByStoreId(store_id)
             return storeAndProducts
         } catch (error) {
-            if (error instanceof HttpException) {
-                throw error;
-            }
+            throw error;
         }
     }
 
-    @Get(':admin_id')
-    getStoresByAdmin (@Param(':admin_id') admin_id: string) {
+    @Get('admin/:admin_id')
+    getStoresByAdmin (@Param('admin_id') admin_id: string) {
         try {
             const stores = this.storesService.getStoresByAdmin(admin_id)
             return stores
         } catch (error) {
-            if (error instanceof HttpException) {
-                throw error;
-            }
+            throw error
         }
     }
 }

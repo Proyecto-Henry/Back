@@ -30,12 +30,12 @@ export class AuthController {
     return this.authService.signUpAdmin(signUpAdmin);
   }
   
-  @ApiBearerAuth()
-  @Post('signUpUser')
-  @UseGuards(AuthGuard)
-  async signUp(@Body() signUpUser: SignUpAuthDto, @Req() req: Request & { user: any }) {
-    //el endpoint signInStore crea la tienda y el usuario
-  }
+  // @ApiBearerAuth()
+  // @Post('signUpUser')
+  // @UseGuards(AuthGuard)
+  // async signUp(@Body() signUpUser: SignUpAuthDto, @Req() req: Request & { user: any }) {
+  //   //el endpoint signInStore crea la tienda y el usuario
+  // }
   
   @ApiBearerAuth()
   @Post('signUpStore')
@@ -48,8 +48,6 @@ export class AuthController {
   @Post('signinGoogle')
   signinGoogle(@Body() payload: payloadGoogle ) {
     try {
-      console.log(payload);
-      
       return this.authService.signinGoogle(payload)
     } catch (error) {
       throw new InternalServerErrorException('Ocurrió un error inesperado. No se pudo autenticar');

@@ -33,7 +33,7 @@ export class StoresRepository {
         }
       }
     }) 
-    if (!stores) {
+    if (stores.length === 0) {
       throw new NotFoundException('Tiendas no encontradas');
     }
     return stores
