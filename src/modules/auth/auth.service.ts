@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { SignUpAuthDto } from './dtos/signup-auth.dto';
@@ -26,6 +27,7 @@ import { payloadGoogle } from './dtos/signinGoogle.dto';
 import { StoresService } from '../stores/stores.service';
 import { Request } from 'express';
 import { Store } from 'src/entities/Store.entity';
+import { Status_Sub } from 'src/enums/status_sub.enum';
 
 @Injectable()
 export class AuthService {
@@ -135,7 +137,7 @@ export class AuthService {
     if (!validPassword) {
       throw new UnauthorizedException('❌Credenciales inválidas');
     }
-
+    
     const payload = {
       id: userOrAdmin.id,
       email: userOrAdmin.email,
@@ -155,6 +157,23 @@ export class AuthService {
       email: userOrAdmin.email,
       role: role,
     };
+
+    // Verificar si la suscripción está vencida
+    if(role === Role.ADMIN) {
+      const subscription = await this.subscriptionRepository.findOne({
+      where: { admin: { email: userOrAdmin.email } }
+      });
+
+      if (!subscription) {
+        throw new NotFoundException('Suscripción no encontrada para el administrador');
+      }
+      const now = new Date();
+      if (now > subscription.end_date) {
+        // Actualizar el estado de la suscripción a 'paused'
+        subscription.status = Status_Sub.PAUSED;
+        await this.subscriptionRepository.save(subscription);
+      }
+    }
 
     return { message, token, user };
   }
@@ -224,6 +243,68 @@ export class AuthService {
 
   //TODO CREAR TIENDA
   async buildStore(userStore: SignUpAuthDto, req: Request & { user: any }) {
+    // revisar el tipo de plan en la suscripción del administrador
+  const subscription = await this.subscriptionRepository.findOne({
+    where: { admin: { id: req.user.id } },
+  });
+
+  if (!subscription) {
+    throw new NotFoundException('Suscripción no encontrada para el administrador');
+  }
+
+  // Verificar si el admin tiene una suscripción de prueba
+  if (subscription.status === 'trial') {
+    // Contar las tiendas existentes del admin
+    const storeCount = await this.storesRepository.count({
+      where: { admin: { id: req.user.id } },
+    });
+
+    if (storeCount >= 1) {
+      throw new BadRequestException(
+        'Los administradores con suscripción de prueba solo pueden tener una tienda',
+      );
+    }
+  }
+
+  if (subscription.status === 'active' && subscription.plan === '1 store') {
+    // Contar las tiendas existentes del admin
+    const storeCount = await this.storesRepository.count({
+      where: { admin: { id: req.user.id } },
+    });
+
+    if (storeCount >= 1) {
+      throw new BadRequestException(
+        'Los administradores con suscripción \'1 store\' solo pueden tener una tienda',
+      );
+    }
+  }
+
+  if (subscription.status === 'active' && subscription.plan === '2 stores') {
+    // Contar las tiendas existentes del admin
+    const storeCount = await this.storesRepository.count({
+      where: { admin: { id: req.user.id } },
+    });
+
+    if (storeCount >= 2) {
+      throw new BadRequestException(
+        'Los administradores con suscripción \'2 stores\' solo pueden tener 2 tiendas',
+      );
+    }
+  }
+
+  if (subscription.status === 'active' && subscription.plan === '4 stores') {
+    // Contar las tiendas existentes del admin
+    const storeCount = await this.storesRepository.count({
+      where: { admin: { id: req.user.id } },
+    });
+
+    if (storeCount >= 4) {
+      throw new BadRequestException(
+        'Los administradores con suscripción \'4 stores\' solo pueden tener 4 tiendas',
+      );
+    }
+  }
+
     // controlo que la direccion no se repita
     const existAddress = await this.storesService.findAddress(
       userStore.address,

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from 'src/entities/Product.entity';
 import { In, Repository } from 'typeorm';
@@ -7,12 +7,14 @@ import { CreateProductDto } from './dtos/create-product.dto';
 import { Store } from 'src/entities/Store.entity';
 import { error } from 'console';
 import { UpdateProductDto } from './dtos/update-product.dto';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 @Injectable()
 export class ProductsRepository {
   constructor(
     @InjectRepository(Product) private productsRepository: Repository<Product>,
     @InjectRepository(Store) private storeRepository: Repository<Store>,
+    private readonly subscriptionsService: SubscriptionsService
   ) {}
 
   async getProductsById(saleData: RegisterSaleDto) {
@@ -38,7 +40,28 @@ export class ProductsRepository {
     });
 
     if (!store) {
-      throw new error('Store not found');
+      throw new error('Tienda no encontrada');
+    }
+
+    // Buscar la suscripción del administrador
+    const subscription = await this.subscriptionsService.getSubscriptionByAdminId(createProductDto.admin_id);
+
+    if (!subscription) {
+      throw new NotFoundException('Suscripción no encontrada para el administrador');
+    }
+
+    // Si la suscripción es de prueba, aplicar restricciones
+    if (subscription.status === 'trial') {
+      // Contar los productos activos (status: true) de la tienda
+      const productCount = await this.productsRepository.count({
+        where: { store: { id: store.id }, status: true },
+      });
+
+      if (productCount >= 10) {
+        throw new BadRequestException(
+          'Los administradores con suscripción de prueba solo pueden cargar hasta 10 productos en su tienda',
+        );
+      }
     }
 
     const newProduct = this.productsRepository.create({
