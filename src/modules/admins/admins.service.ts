@@ -14,10 +14,17 @@ import { payloadGoogle } from '../auth/dtos/signinGoogle.dto';
 @Injectable()
 export class AdminsService {
   
-  
   constructor(
     private readonly adminsRepository: AdminsRepository,
   ) {}
+
+  getAllAdmins() {
+    return this.adminsRepository.getAllAdmins();
+  }
+  
+  getStoresByAdmin(adminId: string) {
+    return this.adminsRepository.getStoresByAdmin(adminId);
+  }
   
   async getAdminByEmail(email: string) {
     return this.adminsRepository.getAdminByEmail(email);

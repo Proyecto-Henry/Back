@@ -4,10 +4,32 @@ import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
 import { updateAdminDto } from './dtos/update-profile-admin.dto';
 import { CreateStoreDto } from '../stores/dtos/CreateStore.Dto';
 import { CreateStoreResponseDto } from '../stores/dtos/CreateStoreResponse.dto';
+import { UUID } from 'crypto';
+import { Admin } from 'src/entities/Admin.entity';
 
 @Controller('admins')
 export class AdminsController {
   constructor(private readonly adminsService: AdminsService) {}
+
+  //? ENDPOINT: RETORNA TODOS LOS ADMINS
+  @Get()
+  getAllAdmins(): Promise<Admin[]|string> {
+    try {
+      return this.adminsService.getAllAdmins();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  //? ENDPOINT: RETORNA TODAS LAS TIENDAS POR ADMINISTRADOR
+  @Get('stores/:adminId')
+  getUsersStores(@Param('adminId') adminId: UUID) {
+    try {
+      return this.adminsService.getStoresByAdmin(adminId);
+    } catch (error) {
+      throw error;
+    }
+  }
 
   @Get(':admin_id')
   getAdminById(@Param('admin_id') admin_id: string) {
@@ -19,7 +41,6 @@ export class AdminsController {
     }
   }
   
-
   @Patch(':admin_id')
   disableAdmin(@Param('admin_id') admin_id: string) {
     try {

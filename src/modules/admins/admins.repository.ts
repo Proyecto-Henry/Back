@@ -22,6 +22,28 @@ export class AdminsRepository {
     private readonly jwtService: JwtService,
   ) {}
 
+  async getAllAdmins() {
+    const admin = await this.adminsRepository.find({
+      relations: ['stores'],
+      select: ['id', 'email', 'name', 'stores']
+    })
+    return admin ? admin : 'No se encontraron administradores';
+  }
+  
+  async getStoresByAdmin(adminId: string) {
+    const stores = await this.adminsRepository.find({
+      where: { id: adminId },
+      relations: ["stores"],
+      select: ['id', 'stores', 'name', 'status',]
+    });
+    
+    if (!stores) {
+      return 'Administrador no encontrado';
+    }
+  
+    return stores.length ? stores : 'No tiene tiendas asociadas';
+  }
+
   async getAdminByEmail(email: string) {
     return await this.adminsRepository.findOne({
       where: { email },

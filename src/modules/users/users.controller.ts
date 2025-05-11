@@ -1,5 +1,7 @@
-import { Controller, Param, Patch, Get } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { UUID } from 'crypto';
+import { User } from 'src/entities/User.entity';
 
 @Controller('users')
 export class UsersController {
@@ -17,12 +19,23 @@ export class UsersController {
     }
   }
 
-  @Get(':user_id')
-  getUserByUserId(@Param('user_id') user_id: string) {
+  //? ENDPOINT: RETORNA UN USUARIO POR ID
+  @Get(':id')
+  getUser(@Param('id', new ParseUUIDPipe()) id: UUID): Promise<User|string> {
     try {
-      return this.usersService.getUserByUserId(user_id)
+      return this.usersService.findUser(id);
     } catch (error) {
-      
+      throw new NotFoundException(error.message)
+    }
+  }
+
+  //? ENDPOINT: RETORNA TODOS LOS USUARIOS
+  @Get()
+  getAllusers(): Promise<User[]> {
+    try {
+      return this.usersService.getAllUsers();
+    } catch (error) {
+      throw error;
     }
   }
 }
