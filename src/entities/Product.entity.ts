@@ -26,6 +26,9 @@ export class Product {
   @Column({ type: 'int', nullable: false })
   stock: number;
 
+  @Column({default: true})
+  status: boolean;
+
   @ManyToOne(() => Store, (store) => store.products)
   @JoinColumn({ name: 'store_id' })
   store: Store;

@@ -31,7 +31,7 @@ export class SalesService {
     return this.salesRepository.registerSale(saleData);
   }
 
-  DeleteSalesByServicesId(saleData: string) {
-    return this.salesRepository.deleteSale(saleData);
+  DeleteSalesByStoreId(store_id: string) {
+    return this.salesRepository.DeleteSalesByStoreId(store_id);
   }
 }

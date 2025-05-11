@@ -115,8 +115,6 @@ import { Repository } from 'typeorm';
           await queryRunner.commitTransaction();
       
           console.log('✅ Suscripción guardada en la base de datos:', subscription?.id);
-      
-          return { success: true, subscriptionId: stripeSubscription.id };
         } catch (error) {
           await queryRunner.rollbackTransaction();
       

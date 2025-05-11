@@ -55,7 +55,8 @@ export class SalesRepository {
       sale_details: sale_details.map((item) => ({
         product: { id: item.product_id},
         quantity: item.quantity
-      }))
+      })),
+      store: { id: saleData.store_id}
     })
 
     // actualizamos el stock de los productos vendidos
@@ -89,5 +90,8 @@ export class SalesRepository {
     return result.affected ?? 0;
   }
 
-
+  async DeleteSalesByStoreId(store_id: string) {
+    const result = await this.salesRepository.delete({ store: { id: store_id } });
+    return result.affected ?? 0;
+  }
 }

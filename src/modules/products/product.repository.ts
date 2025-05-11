@@ -49,20 +49,24 @@ export class ProductsRepository {
     return this.productsRepository.save(newProduct);
   }
 
-  findProductsByStoreId(store_id: string): Promise<Product[]> {
-    return this.productsRepository.find({
+  async findProductsByStoreId(store_id: string): Promise<Product[]> {
+    const products = await this.productsRepository.find({
       where: {
         store: { id: store_id },
+        status: true, // Filtrar productos con status: true
       },
     });
+    return products
   }
 
   async removeProduct(product_id: string): Promise<{ message: string }> {
-    let deletedProduct = await this.productsRepository.delete(product_id);
-
-    if (deletedProduct.affected === 0) {
+    const product = await this.productsRepository.findOneBy({id: product_id})
+    
+    if (!product) {
       throw new NotFoundException('Producto no encontrado');
     }
+    product.status = false
+    await this.productsRepository.save(product)
     return { message: 'Producto eliminado correctamente' };
   }
 

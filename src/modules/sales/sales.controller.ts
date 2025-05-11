@@ -45,14 +45,12 @@ export class SalesController {
   }
 
   @Delete('/store/:store_id')
-  DeleteSalesByStoreId(@Param(':store_id') store_id: string) {
+  DeleteSalesByStoreId(@Param('store_id') store_id: string) {
     try {
-      const sales = this.salesService.DeleteSalesByServicesId(store_id);
+      const sales = this.salesService.DeleteSalesByStoreId(store_id);
       return sales;
     } catch (error) {
-      if (Error instanceof HttpException) {
         throw error;
-      }
     }
   }
 

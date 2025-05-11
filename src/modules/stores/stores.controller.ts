@@ -24,4 +24,14 @@ export class StoresController {
             throw error
         }
     }
+
+    @Get('user/:user_id')
+    getStoreAndProductsByUserId (@Param('user_id') user_id: string) {
+        try {
+            const stores = this.storesService.getStoreAndProductsByUserId(user_id)
+            return stores
+        } catch (error) {
+            throw error
+        }
+    }
 }

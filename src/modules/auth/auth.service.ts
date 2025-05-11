@@ -299,6 +299,14 @@ export class AuthService {
         message: 'Usuario registrado con éxito, chequee su casilla de correo'
       };
     } else if (googleId === admin.google_id) {
+      const payload = {
+        id: admin.id,
+        email: admin.email,
+        status:admin.status,
+        role: Role.ADMIN
+      };
+      const token = this.jwtService.sign(payload);
+
       const user = {
         name: admin.name,
         id: admin.id,
@@ -307,6 +315,7 @@ export class AuthService {
       };
       return {
         message: `✅Login exitoso! Bienvenido ${(admin as Admin).name}`,
+        token: token,
         user: user,
       };
     } else {
