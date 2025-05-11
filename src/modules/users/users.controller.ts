@@ -1,4 +1,4 @@
-import { Controller, Param, Patch } from '@nestjs/common';
+import { Controller, Param, Patch, Get } from '@nestjs/common';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -14,6 +14,15 @@ export class UsersController {
       };
     } catch (error) {
         throw error;
+    }
+  }
+
+  @Get(':user_id')
+  getUserByUserId(@Param('user_id') user_id: string) {
+    try {
+      return this.usersService.getUserByUserId(user_id)
+    } catch (error) {
+      
     }
   }
 }

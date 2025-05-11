@@ -58,11 +58,13 @@ export class ProductsRepository {
   }
 
   async removeProduct(product_id: string): Promise<{ message: string }> {
-    let deletedProduct = await this.productsRepository.delete(product_id);
-
-    if (deletedProduct.affected === 0) {
+    const product = await this.productsRepository.findOneBy({id: product_id})
+    
+    if (!product) {
       throw new NotFoundException('Producto no encontrado');
     }
+    product.status = false
+    await this.productsRepository.save(product)
     return { message: 'Producto eliminado correctamente' };
   }
 

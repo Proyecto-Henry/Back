@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
+  
   constructor(
     @InjectRepository(User) private readonly usersRepository: Repository<User>,
   ) {}
@@ -30,5 +31,17 @@ export class UsersService {
 
   async save(user: User) {
     return this.usersRepository.save(user);
+  }
+
+  async getUserByUserId(user_id: string) {
+    return await this.usersRepository.findOne({
+      where: { id: user_id },
+      relations: ['store'],
+      select: {
+        id: true,
+        email: true,
+        store: true
+      },
+    });
   }
 }
