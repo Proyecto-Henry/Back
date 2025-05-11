@@ -61,4 +61,17 @@ export class StoresRepository {
   async save(store: SignUpAuthDto) {
     return this.storesRepository.save(store);
   }
+
+  async getStoreAndProductsByUserId(user_id: string) {
+    const storeAndProducts = await this.storesRepository.findOne({
+      where: { user: { id: user_id } },
+      relations: {
+        products: true
+      }
+    })
+    if (!storeAndProducts) {
+      throw new NotFoundException('Tienda no encontrada');
+    }
+    return storeAndProducts
+  }
 }

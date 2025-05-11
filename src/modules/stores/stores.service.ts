@@ -27,4 +27,8 @@ export class StoresService {
   save(store: SignUpAuthDto) {
     return this.storesRepository.save(store);
   }
+
+  getStoreAndProductsByUserId(user_id: string) {
+    return this.storesRepository.getStoreAndProductsByUserId(user_id)
+  }
 }
