@@ -202,14 +202,7 @@ export class AuthService {
 
   //TODO REGISTRO DE USUARIO/VENDEDOR
   async signUpUser(user: SignUpAuthDto, admin: any, newStore: any) {
-    // controlo que el usuario no exista
-    const userAlreadyRegister = await this.usersService.getUserByEmail(
-      user.email,
-    );
-    if (userAlreadyRegister)
-      throw new BadRequestException(
-        'Parece que ya hay un usuario registrado con dicho email',
-      );
+    
     const hashedPassword = await bcrypt.hash(user.password, 10);
 
     // creo el usuario
@@ -240,6 +233,15 @@ export class AuthService {
         'Parece que ya hay una tienda registrada en esa direccion',
       );
 
+      // controlo que el usuario no exista
+    const userAlreadyRegister = await this.usersService.getUserByEmail(
+      userStore.email,
+    );
+    if (userAlreadyRegister)
+      throw new BadRequestException(
+        'Parece que ya hay un usuario registrado con dicho email',
+      );
+
     // traigo las propiedades del administrador
     const admin = await this.adminsService.getAdminById(req.user.id);
 
@@ -249,14 +251,12 @@ export class AuthService {
       admin: admin,
       user: undefined,
     });
-
-    
     const store = await this.storesRepository.save(newStore);
     console.log('🏪store creada: ', store);
-    
+
     // creo el usuario
     const user = await this.signUpUser(userStore, admin, newStore);
-
+    
     // actualizo la tienda con su usuario
     store.user = user;
     await this.storesRepository.save(store);

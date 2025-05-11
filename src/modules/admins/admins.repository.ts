@@ -21,14 +21,27 @@ export class AdminsRepository {
     private dataSource: DataSource,
     private readonly jwtService: JwtService,
   ) {}
+
+  async getAllAdmins() {
+    const admin = await this.adminsRepository.find({
+      relations: ['stores'],
+      select: ['id', 'email', 'name', 'stores']
+    })
+    return admin ? admin : 'No se encontraron administradores';
+  }
   
-  async usersStores(adminId: string) {
-    const existStore = await this.adminsRepository.find({
-      where: { stores: { id: adminId }},
-      relations: ["stores"]
+  async getStoresByAdmin(adminId: string) {
+    const stores = await this.adminsRepository.find({
+      where: { id: adminId },
+      relations: ["stores"],
+      select: ['id', 'stores', 'name', 'status',]
     });
     
-    return existStore? existStore : "No tiene tiendas asociadas";
+    if (!stores) {
+      return 'Administrador no encontrado';
+    }
+  
+    return stores.length ? stores : 'No tiene tiendas asociadas';
   }
 
   async getAdminByEmail(email: string) {

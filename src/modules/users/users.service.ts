@@ -9,10 +9,13 @@ import { User } from 'src/entities/User.entity';
 import { Status_User } from 'src/enums/status_user.enum';
 import { Repository } from 'typeorm';
 import { Admin } from 'src/entities/Admin.entity';
+import { UsersRepository } from './users.repository';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class UsersService {
   constructor(
+    private readonly usersRepo: UsersRepository,
     @InjectRepository(User) private readonly usersRepository: Repository<User>,
   ) {}
 
@@ -20,14 +23,12 @@ export class UsersService {
     return this.usersRepository.findOneBy({ id });
   }
 
-  async findUser(id: string) {
-    const user = await this.usersRepository.findOne({
-      where: { id },
-      relations: ['store', 'admin'],
-    });
+  async findUser(id: UUID) {
+    return this.usersRepo.findUser(id);
+  }
 
-    if (!user) throw new BadRequestException('usuario no encontrado');
-    return user;
+  async getAllUsers() {
+    return this.usersRepo.getAllUsers();
   }
 
   async getUserByEmail(email: string) {

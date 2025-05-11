@@ -17,9 +17,13 @@ export class AdminsService {
   constructor(
     private readonly adminsRepository: AdminsRepository,
   ) {}
+
+  getAllAdmins() {
+    return this.adminsRepository.getAllAdmins();
+  }
   
-  usersStores(adminId: string) {
-    return this.adminsRepository.usersStores(adminId);
+  getStoresByAdmin(adminId: string) {
+    return this.adminsRepository.getStoresByAdmin(adminId);
   }
   
   async getAdminByEmail(email: string) {
