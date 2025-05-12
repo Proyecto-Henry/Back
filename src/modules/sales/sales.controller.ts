@@ -56,12 +56,16 @@ export class SalesController {
     try {
       return this.salesService.DeleteSalesByStoreId(store_id);
     } catch (error) {
-        throw new HttpException('No se pudo realizar la venta', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException('No se pudieron eliminar las ventas', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @Delete(':sale_id')
   deleteSale(@Param('sale_id', ParseUUIDPipe) sale_id: string) {
-    return this.salesService.deleteSale(sale_id);
+    try {
+      return this.salesService.deleteSale(sale_id);
+    } catch (error) {
+      throw new HttpException('No se pudo eliminar la venta', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }
