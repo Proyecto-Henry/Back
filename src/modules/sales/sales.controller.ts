@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpException,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -43,16 +44,19 @@ export class SalesController {
   @Post()
   @UseGuards(ValidateStore, ValidateProduct)
   registerSale(@Body() saleData: RegisterSaleDto) {
-    return this.salesService.registerSale(saleData);
+    try {
+      return this.salesService.registerSale(saleData);
+    } catch (error) {
+      throw error
+    }
   }
 
   @Delete('/store/:store_id')
   DeleteSalesByStoreId(@Param('store_id') store_id: string) {
     try {
-      const sales = this.salesService.DeleteSalesByStoreId(store_id);
-      return sales;
+      return this.salesService.DeleteSalesByStoreId(store_id);
     } catch (error) {
-        throw error;
+        throw new HttpException('No se pudo realizar la venta', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

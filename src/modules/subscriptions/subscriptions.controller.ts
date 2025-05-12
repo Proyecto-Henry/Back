@@ -20,7 +20,9 @@ export class SubscriptionsController {
   getSubscriptionByAdminId(@Param('admin_id') admin_id: string) {
     try {
       return this.subscriptionsService.getSubscriptionByAdminId(admin_id);
-    } catch {}
+    } catch (error) {
+      throw error
+    }
   }
 
   @Post('createSubscription')
