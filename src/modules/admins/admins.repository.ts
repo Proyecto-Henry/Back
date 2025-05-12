@@ -64,6 +64,7 @@ export class AdminsRepository {
           id: true,
           status: true,
           start_date: true,
+          plan: true
         },
       },
     });
@@ -82,6 +83,7 @@ export class AdminsRepository {
       subscription: {
         status: result.subscription.status,
         start_date: result.subscription.start_date,
+        plan: result.subscription.plan
       },
     };
     return admin
@@ -177,6 +179,7 @@ export class AdminsRepository {
           id: true,
           status: true,
           start_date: true,
+          plan: true
         },
       },
     });
@@ -190,6 +193,7 @@ export class AdminsRepository {
       subscription: {
         status: admin.subscription.status,
         start_date: admin.subscription.start_date,
+        plan: admin.subscription.plan
       },
     }));
 

@@ -12,14 +12,14 @@ export class AdminsController {
   constructor(private readonly adminsService: AdminsService) {}
 
   //? ENDPOINT: RETORNA TODOS LOS ADMINS
-  @Get()
-  getAllAdmins(): Promise<Admin[]|string> {
-    try {
-      return this.adminsService.getAllAdmins();
-    } catch (error) {
-      throw error;
-    }
-  }
+  // @Get()
+  // getAllAdmins(): Promise<Admin[]|string> {
+  //   try {
+  //     return this.adminsService.getAllAdmins();
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 
   //? ENDPOINT: RETORNA TODAS LAS TIENDAS POR ADMINISTRADOR
   @Get('stores/:adminId')
