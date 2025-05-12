@@ -91,7 +91,7 @@ export class SalesRepository {
 
     return {
         message: 'Venta realizada con éxito',
-        succes: true,
+        success: true,
         sale: response
     };
   }
