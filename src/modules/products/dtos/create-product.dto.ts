@@ -20,5 +20,8 @@ export class CreateProductDto {
 
   @IsUUID()
   store_id: string;
+
+  @IsUUID()
+  admin_id : string;
 }
   
