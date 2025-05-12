@@ -19,6 +19,7 @@ import { StripeService } from 'src/common/stripe.service';
 import { StoresService } from '../stores/stores.service';
 import { StoresRepository } from '../stores/stores.repository';
 import { Store } from 'src/entities/Store.entity';
+import { CountryModule } from '../country/country.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Admin, User, Country, Subscription, Store])],
@@ -35,7 +36,7 @@ import { Store } from 'src/entities/Store.entity';
     MailService,
     StripeService,
     StoresService,
-    StoresRepository
+    StoresRepository,
   ],
   controllers: [AuthController],
   exports: [AdminsService],

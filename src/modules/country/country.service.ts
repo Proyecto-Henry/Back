@@ -11,4 +11,8 @@ export class CountryService {
   findCountry(country: string) {
     return this.countryRepository.findCountry(country);
   }
+
+  findByCode(countryCode) {
+    return this.countryRepository.findByCode(countryCode);
+  }
 }

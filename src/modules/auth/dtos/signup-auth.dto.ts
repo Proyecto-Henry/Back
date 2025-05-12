@@ -2,11 +2,11 @@ import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
-  IsPhoneNumber,
   IsString,
   Matches,
   MaxLength,
   MinLength,
+  Validate,
 } from 'class-validator';
 
 export class SignUpAuthDto {
@@ -41,13 +41,13 @@ export class SignUpAuthDto {
   @MaxLength(30, {
     message: 'El numero de celular no debe tener más de 30 caracteres.',
   })
-  @IsPhoneNumber(undefined, {
+  @Matches(/^\d{6,30}$/, {
     message: 'El número de teléfono debe ser válido',
   })
   @IsOptional()
-  phone?: string;
+  phone: string;
 
   @IsString()
   @IsOptional()
-  countryId?: string;
+  countryCode: string;
 }

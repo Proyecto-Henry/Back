@@ -3,6 +3,7 @@ import { ProductsRepository } from './product.repository';
 import { RegisterSaleDto } from '../sales/dtos/registerDate.dto';
 import { CreateProductDto } from './dtos/create-product.dto';
 import { UpdateProductDto } from './dtos/update-product.dto';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class ProductsService {
@@ -31,5 +32,9 @@ export class ProductsService {
   }
   removeProduct(product_id: string) {
     return this.productsRepository.removeProduct(product_id)
+  }
+
+  findProductsById(id: UUID[]) {
+    return this.productsRepository.findProductsById(id);
   }
 }

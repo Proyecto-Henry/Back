@@ -221,7 +221,6 @@ export class AuthService {
 
   //TODO REGISTRO DE USUARIO/VENDEDOR
   async signUpUser(user: SignUpAuthDto, admin: any, newStore: any) {
-    
     const hashedPassword = await bcrypt.hash(user.password, 10);
 
     // creo el usuario
@@ -309,12 +308,13 @@ export class AuthService {
     const existAddress = await this.storesService.findAddress(
       userStore.address,
     );
+
     if (existAddress)
       throw new BadRequestException(
         'Parece que ya hay una tienda registrada en esa direccion',
       );
 
-      // controlo que el usuario no exista
+    // controlo que el usuario no exista
     const userAlreadyRegister = await this.usersService.getUserByEmail(
       userStore.email,
     );
@@ -322,7 +322,11 @@ export class AuthService {
       throw new BadRequestException(
         'Parece que ya hay un usuario registrado con dicho email',
       );
-
+    const validCountryCode = await this.countryService.findByCode(
+      userStore.countryCode,
+    );
+    if (!validCountryCode)
+      throw new BadRequestException('No existe el codigo de area');
     // traigo las propiedades del administrador
     const admin = await this.adminsService.getAdminById(req.user.id);
 
@@ -337,7 +341,7 @@ export class AuthService {
 
     // creo el usuario
     const user = await this.signUpUser(userStore, admin, newStore);
-    
+
     // actualizo la tienda con su usuario
     store.user = user;
     await this.storesRepository.save(store);
@@ -347,12 +351,12 @@ export class AuthService {
       store: {
         id: store.id,
         name: store.name,
-        address: store.address
+        address: store.address,
       },
       user: {
         id: user.id,
-        email: user.email
-      }
+        email: user.email,
+      },
     };
   }
 
@@ -373,18 +377,16 @@ export class AuthService {
       const result = await this.adminRepository.save(admin);
       subscription.admin = result;
       await this.subscriptionRepository.save(subscription);
-      await this.mailService.sendNotificationMail(
-        admin.email
-      );
+      await this.mailService.sendNotificationMail(admin.email);
       return {
-        message: 'Usuario registrado con éxito, chequee su casilla de correo'
+        message: 'Usuario registrado con éxito, chequee su casilla de correo',
       };
     } else if (googleId === admin.google_id) {
       const payload = {
         id: admin.id,
         email: admin.email,
-        status:admin.status,
-        role: Role.ADMIN
+        status: admin.status,
+        role: Role.ADMIN,
       };
       const token = this.jwtService.sign(payload);
 
@@ -392,7 +394,7 @@ export class AuthService {
         name: admin.name,
         id: admin.id,
         email: admin.email,
-        role: Role.ADMIN
+        role: Role.ADMIN,
       };
       return {
         message: `✅Login exitoso! Bienvenido ${(admin as Admin).name}`,

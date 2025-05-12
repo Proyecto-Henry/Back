@@ -1,4 +1,4 @@
-import { IsUUID, IsString, IsNumber, IsInt, Min, MaxLength } from 'class-validator';
+import { IsUUID, IsString, IsNumber, IsInt, Min, MaxLength, IsOptional } from 'class-validator';
 
 export class CreateProductDto {
   @IsString()
@@ -11,6 +11,7 @@ export class CreateProductDto {
 
   @IsInt()
   @Min(0)
+  @IsOptional()
   stock_min: number;
 
   @IsInt()

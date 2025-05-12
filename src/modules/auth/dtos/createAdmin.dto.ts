@@ -43,7 +43,7 @@ export class createAdmin {
    * @example example@gmail.com
    */
   @IsNotEmpty()
-  @IsEmail()
+  @IsEmail()  
   @Transform(({ value }) => value.trim().toLowerCase())
   email: string;
 

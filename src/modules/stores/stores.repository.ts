@@ -78,4 +78,10 @@ export class StoresRepository {
     storeAndProducts.products = storeAndProducts.products.filter((product) => product.status === true);
     return storeAndProducts
   }
+
+  async findStoreById(id) {
+    return await this.storesRepository.findOne({
+      where: { id }
+    })
+  }
 }
