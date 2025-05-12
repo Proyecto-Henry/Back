@@ -1,13 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ProductsService } from './product.service';
 import { CreateProductDto } from './dtos/create-product.dto';
 import { UpdateProductDto } from './dtos/update-product.dto';
+import { DuplicatedProduct } from 'src/guards/duplicated.guard';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
+  @UseGuards(DuplicatedProduct)
   createProduct(@Body() createProductDto: CreateProductDto) {
     return this.productsService.createProduct(createProductDto);
   }

@@ -21,4 +21,10 @@ export class CountryRepository {
       name: country,
     });
   }
+
+  async findByCode(countryCode) {
+    return await this.countryRepository.findOne({
+      where: { phone_code: countryCode }
+    })
+  }
 }

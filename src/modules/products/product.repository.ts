@@ -7,6 +7,7 @@ import { CreateProductDto } from './dtos/create-product.dto';
 import { Store } from 'src/entities/Store.entity';
 import { error } from 'console';
 import { UpdateProductDto } from './dtos/update-product.dto';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class ProductsRepository {
@@ -75,6 +76,12 @@ export class ProductsRepository {
     return this.productsRepository.findOne({
       where: { id: product_id },
       relations: ['store'],
+    });
+  }
+
+  async findProductsById(id: UUID[]): Promise<Product[]> {
+    return await this.productsRepository.findBy({
+      id: In(id),
     });
   }
 }

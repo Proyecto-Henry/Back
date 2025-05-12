@@ -7,9 +7,12 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { RegisterSaleDto } from './dtos/registerDate.dto';
+import { ValidateStore } from 'src/guards/validateStore.guard';
+import { ValidateProduct } from 'src/guards/validateProduct.guard';
 
 @Controller('sales')
 export class SalesController {
@@ -37,9 +40,8 @@ export class SalesController {
     }
   }
 
-  
-
   @Post()
+  @UseGuards(ValidateStore, ValidateProduct)
   registerSale(@Body() saleData: RegisterSaleDto) {
     return this.salesService.registerSale(saleData);
   }

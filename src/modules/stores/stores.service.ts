@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { StoresRepository } from './stores.repository';
 import { uploadImageStoreDto } from './dtos/upload-image-store.dto';
 import { SignUpAuthDto } from '../auth/dtos/signup-auth.dto';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class StoresService {
@@ -30,5 +31,9 @@ export class StoresService {
 
   getStoreAndProductsByUserId(user_id: string) {
     return this.storesRepository.getStoreAndProductsByUserId(user_id)
+  }
+
+  async findStoreById(id: UUID) {
+    return this.storesRepository.findStoreById(id); 
   }
 }
