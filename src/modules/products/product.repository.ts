@@ -17,6 +17,13 @@ export class ProductsRepository {
     @InjectRepository(Store) private storeRepository: Repository<Store>,
     private readonly subscriptionsService: SubscriptionsService
   ) {}
+  
+  // async getStockByStore(product_id: string[]) {
+  //   return await this.productsRepository.find({
+  //     where: { id: In(product_id) },
+  //     relations: ['store'],
+  //   });
+  // }
 
   async getProductsById(saleData: RegisterSaleDto) {
     const sale_details = saleData.sale_details;
@@ -103,8 +110,9 @@ export class ProductsRepository {
   }
 
   async findProductsById(id: UUID[]): Promise<Product[]> {
-    return await this.productsRepository.findBy({
-      id: In(id),
+    return await this.productsRepository.find({
+      where: {id: In(id)},
+      relations: [ 'store' ]
     });
   }
 }
