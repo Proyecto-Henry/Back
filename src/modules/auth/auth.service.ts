@@ -149,7 +149,7 @@ export class AuthService {
     const message =
       role === Role.ADMIN
         ? `✅Login exitoso! Bienvenido ${(userOrAdmin as Admin).name}`
-        : '✅Login exitoso! Bienvenido';
+        : `✅Login exitoso! Bienvenido`;
 
     const user = {
       name: (userOrAdmin as Admin).name,
