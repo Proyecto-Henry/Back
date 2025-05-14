@@ -3,10 +3,12 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UUID } from 'crypto';
 import { User } from 'src/entities/User.entity';
+import { Status_User } from 'src/enums/status_user.enum';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersRepository {
+  
   constructor(
     @InjectRepository(User) private usersRepository: Repository<User>,
     private readonly jwtService: JwtService,
@@ -30,5 +32,15 @@ export class UsersRepository {
       select: ['email', 'id', 'status']
      });
     return user ? user : 'Usuario no encontrado';
+  }
+
+  async deleteUserByAdminId(store_id: string) {
+    const user = await this.usersRepository.findOne({
+      where: { store: { id: store_id } }
+    })
+    if (user) {
+      user.status = Status_User.INACTIVE
+      await this.usersRepository.save(user)
+    }
   }
 }

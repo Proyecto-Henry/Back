@@ -9,9 +9,10 @@ import { ProductModule } from '../products/products.module';
 import { StoresService } from '../stores/stores.service';
 import { StoresRepository } from '../stores/stores.repository';
 import { Store } from 'src/entities/Store.entity';
+import { UserModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Sale, Sale_Detail, Store]), ProductModule],
+  imports: [TypeOrmModule.forFeature([Sale, Sale_Detail, Store]), ProductModule, UserModule],
   providers: [SalesService, SalesRepository, StoresService, StoresRepository],
   controllers: [SalesController],
   exports: [],

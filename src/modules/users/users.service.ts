@@ -61,4 +61,8 @@ export class UsersService {
       },
     });
   }
+
+  deleteUserByStoreId(store_id: string) {
+    return this.usersRepo.deleteUserByAdminId(store_id)
+  }
 }

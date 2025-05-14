@@ -255,7 +255,7 @@ export class AuthService {
   if (subscription.status === 'trial') {
     // Contar las tiendas existentes del admin
     const storeCount = await this.storesRepository.count({
-      where: { admin: { id: req.user.id } },
+      where: { admin: { id: req.user.id }, status: true },
     });
 
     if (storeCount >= 1) {
@@ -268,7 +268,7 @@ export class AuthService {
   if (subscription.status === 'active' && subscription.plan === '1 store') {
     // Contar las tiendas existentes del admin
     const storeCount = await this.storesRepository.count({
-      where: { admin: { id: req.user.id } },
+      where: { admin: { id: req.user.id }, status: true },
     });
 
     if (storeCount >= 1) {
@@ -281,7 +281,7 @@ export class AuthService {
   if (subscription.status === 'active' && subscription.plan === '2 stores') {
     // Contar las tiendas existentes del admin
     const storeCount = await this.storesRepository.count({
-      where: { admin: { id: req.user.id } },
+      where: { admin: { id: req.user.id }, status: true },
     });
 
     if (storeCount >= 2) {
@@ -294,7 +294,7 @@ export class AuthService {
   if (subscription.status === 'active' && subscription.plan === '4 stores') {
     // Contar las tiendas existentes del admin
     const storeCount = await this.storesRepository.count({
-      where: { admin: { id: req.user.id } },
+      where: { admin: { id: req.user.id }, status: true },
     });
 
     if (storeCount >= 4) {

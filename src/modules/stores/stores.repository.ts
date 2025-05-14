@@ -4,17 +4,19 @@ import { Store } from 'src/entities/Store.entity';
 import { Repository } from 'typeorm';
 import { uploadImageStoreDto } from './dtos/upload-image-store.dto';
 import { SignUpAuthDto } from '../auth/dtos/signup-auth.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class StoresRepository {
   
   constructor(
     @InjectRepository(Store) private storesRepository: Repository<Store>,
+    private readonly usersService: UsersService
   ) {}
 
   async getStoreAndProductsByStoreId(store_id: string) {
     const storeAndProducts = await this.storesRepository.findOne({
-      where: { id: store_id },
+      where: { id: store_id, status: true },
       relations: {
         products: true
       }
@@ -32,7 +34,8 @@ export class StoresRepository {
       where: {
         admin: {
           id: admin_id
-        }
+        },
+        status: true
       }
     }) 
     if (stores.length === 0) {
@@ -66,7 +69,7 @@ export class StoresRepository {
 
   async getStoreAndProductsByUserId(user_id: string) {
     const storeAndProducts = await this.storesRepository.findOne({
-      where: { user: { id: user_id } },
+      where: { user: { id: user_id }, status: true },
       relations: {
         products: true
       }
@@ -81,7 +84,26 @@ export class StoresRepository {
 
   async findStoreById(id) {
     return await this.storesRepository.findOne({
-      where: { id }
+      where: { id, status: true },
     })
+  }
+
+  async deleteStore(store_id: string) {
+    const store = await this.storesRepository.findOne({
+      where: { id: store_id  }
+    })
+    if(!store) {
+      return {
+        success: false,
+        message: "tienda no encontrada"
+      }
+    }
+    store.status = false
+    await this.storesRepository.save(store)
+    await this.usersService.deleteUserByStoreId(store_id)
+    return {
+      success: true,
+      message: "Tienda eliminada con éxito"
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, HttpException, Param } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, Param } from '@nestjs/common';
 import { StoresService } from './stores.service';
 
 @Controller('stores')
@@ -30,6 +30,15 @@ export class StoresController {
         try {
             const stores = this.storesService.getStoreAndProductsByUserId(user_id)
             return stores
+        } catch (error) {
+            throw error
+        }
+    }
+
+    @Delete('/:store_id')
+    deleteStore(@Param('store_id') store_id: string) {
+        try {
+            return this.storesService.deleteStore(store_id)
         } catch (error) {
             throw error
         }

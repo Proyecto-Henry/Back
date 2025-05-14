@@ -30,6 +30,9 @@ export class Store {
   })
   img_store: string;
 
+  @Column({ default: true })
+  status: boolean
+
   @ManyToOne(() => Admin, (admin) => admin.stores)
   @JoinColumn({ name: 'admin_id' })
   admin: Admin;

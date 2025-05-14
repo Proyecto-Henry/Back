@@ -83,7 +83,7 @@ export class ProductsRepository {
   async findProductsByStoreId(store_id: string): Promise<Product[]> {
     const products = await this.productsRepository.find({
       where: {
-        store: { id: store_id },
+        store: { id: store_id, status: true },
         status: true, // Filtrar productos con status: true
       },
     });

@@ -31,17 +31,18 @@ export class AdminsRepository {
   }
   
   async getStoresByAdmin(adminId: string) {
-    const stores = await this.adminsRepository.find({
+    const admin = await this.adminsRepository.findOne({
       where: { id: adminId },
       relations: ["stores"],
       select: ['id', 'stores', 'name', 'status',]
     });
     
-    if (!stores) {
+    if (!admin) {
       return 'Administrador no encontrado';
     }
-  
-    return stores.length ? stores : 'No tiene tiendas asociadas';
+    // Filtrar stores con status: true
+    admin.stores = admin.stores.filter((store) => store.status === true);
+    return admin.stores.length ? admin.stores : 'No tiene tiendas asociadas';
   }
 
   async getAdminByEmail(email: string) {

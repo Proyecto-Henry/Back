@@ -36,4 +36,8 @@ export class StoresService {
   async findStoreById(id: UUID) {
     return this.storesRepository.findStoreById(id); 
   }
+
+  deleteStore(store_id: string) {
+      return this.storesRepository.deleteStore(store_id)
+  }
 }
