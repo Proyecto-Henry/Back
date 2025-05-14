@@ -6,6 +6,10 @@ import {
   Post,
   Get,
   Param,
+  Req,
+  RawBodyRequest,
+  HttpCode,
+  Header,
 } from '@nestjs/common';
 
 import { SubscriptionsService } from './subscriptions.service';
@@ -63,5 +67,17 @@ export class SubscriptionsController {
     } catch (error) {
       throw new HttpException('Error al actualizar el plan. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  
+  @Post('webhook')
+  @HttpCode(200)
+  handleWebhook(@Req() req: RawBodyRequest<Request>) {
+    const signature = req.headers['stripe-signature'] as string;
+    const rawBody = req.body
+    if (!signature || !rawBody) {
+      throw new Error('Faltan datos del webhook de Stripe');
+    }
+    return this.subscriptionsService.handleWebhook(rawBody, signature);
   }
 }

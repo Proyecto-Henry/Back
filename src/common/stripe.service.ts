@@ -316,4 +316,86 @@ import { Repository } from 'typeorm';
           throw new Error('Plan inválido');
       }
     }
+
+    async handleWebhook(rawBody: any, signature: string) {
+      const queryRunner = this.subscriptionsRepository.manager.connection.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      try {
+        // Verificar la firma del webhook para asegurar que proviene de Stripe
+        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+        if (!webhookSecret) {
+          throw new Error('STRIPE_WEBHOOK_SECRET no está definido en las variables de entorno');
+        }
+
+        const event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+        
+        // Manejar el evento invoice.payment_succeeded
+        if (event.type === 'invoice.payment_succeeded') {
+          const invoice = event.data.object as Stripe.Invoice;
+          // Obtener el customerId desde la factura
+          const customerId = typeof invoice.customer === 'string' ? invoice.customer : null;
+          if (!customerId) {
+            console.log('No se encontró un customerId en la factura');
+            return { received: true };
+          }
+
+          console.log('🔄 Procesando renovación de suscripción');
+
+          // Buscar la suscripción en la base de datos
+          const subscription = await queryRunner.manager.findOne(Subscription, {
+            where: { stripe_customer_id: customerId },
+          });
+          
+          if (!subscription) {
+            console.log('Suscripción no encontrada en la base de datos');
+            return { received: true };
+          }
+          const subscription_id = subscription.external_subscription_id
+          
+          // Obtener los detalles de la suscripción desde Stripe
+          const stripeSubscription = await this.stripe.subscriptions.retrieve(subscription_id);
+          const currentPeriodEnd = stripeSubscription.ended_at ? new Date(stripeSubscription.ended_at * 1000) : null; // Convertir timestamp de Stripe a Date
+          const currentPeriodStart = new Date(stripeSubscription.start_date * 1000);
+          // Actualizar fechas y estado en la base de datos
+          subscription.start_date = currentPeriodStart
+          if(currentPeriodEnd) subscription.end_date = currentPeriodEnd;
+
+          await queryRunner.manager.save(subscription);
+          console.log('✅ Suscripción actualizada en la base de datos:', subscription.id);
+          console.log('📅 Nuevo end_date:', currentPeriodEnd);
+
+          await queryRunner.commitTransaction();
+          return { received: true };
+        }
+
+        // Manejar otros eventos si es necesario
+        else if (event.type === 'invoice.payment_failed') {
+          const invoice = event.data.object as Stripe.Invoice;
+          const customerId = typeof invoice.customer === 'string' ? invoice.customer : null;
+          if (!customerId) {
+            console.log('No se encontró un customerId en la factura');
+            return { received: true };
+          }
+          const subscription = await queryRunner.manager.findOne(Subscription, {
+            where: { stripe_customer_id: customerId },
+          });
+          if (!subscription) {
+            console.log('Suscripción no encontrada en la base de datos');
+            return { received: true };
+          }
+          subscription.status = Status_Sub.PAUSED
+          await queryRunner.manager.save(subscription);
+          console.log('⚠️ Pago fallido, suscripción marcada como PAUSED:', subscription.id);
+        }
+        return { received: true };
+      } catch (error) {
+        console.error('❌ Error al manejar webhook de Stripe');
+        await queryRunner.rollbackTransaction();
+        throw new Error(`Error al procesar el webhook de Stripe: ${error.message}`);
+      } finally {
+        await queryRunner.release();
+      }
+    }
 }

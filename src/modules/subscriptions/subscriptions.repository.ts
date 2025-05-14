@@ -10,6 +10,7 @@ import { createSubscriptionDto } from './dtos/create-subscription.dto';
 
 @Injectable()
 export class SubscriptionsRepository {
+  
   constructor(
     @InjectRepository(Subscription)
     private subscriptionsRepository: Repository<Subscription>,
@@ -52,6 +53,10 @@ export class SubscriptionsRepository {
 
   changePlan(data: changePlanDto) {
     return this.stripeService.changePlan(data)
+  }
+
+  handleWebhook(rawBody: any, signature: string) {
+    return this.stripeService.handleWebhook(rawBody, signature);
   }
 }
 

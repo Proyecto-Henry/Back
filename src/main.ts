@@ -4,9 +4,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { loggerGlobal } from './middlewares/logger.middleware';
 import { CountriesSeed } from './seeds/countries/countries.seed';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
+// import * as express from 'express'; // para usar express.raw
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // app.use(
+  //   '/subscriptions/webhook',
+  //   express.raw({ type: 'application/json' }) // esto es para Stripe
+  // );
   app.enableCors({
     origin: 'http://localhost:3000', // Cambia esto por el origen de tu frontend
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
