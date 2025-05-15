@@ -1,6 +1,7 @@
 import {
   IsEmail,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   Matches,
@@ -14,6 +15,7 @@ import { Status_User } from 'src/enums/status_user.enum';
 import { CreateDateColumn } from 'typeorm';
 import { Status_Sub } from 'src/enums/status_sub.enum';
 import { Transform } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class createAdmin {
   /**
@@ -47,24 +49,30 @@ export class createAdmin {
   @Transform(({ value }) => value.trim().toLowerCase())
   email: string;
 
+  /**
+   * @example +54
+   */
   @IsString()
   @IsOptional()
   phone: string;
 
-  @IsString()
-  @IsOptional()
-  imgProfile?: string;
+  // @IsString()
+  // @IsOptional()
+  // imgProfile?: string;
 
-  @IsString()
+  @ApiProperty({
+        example: 1
+  })
+  @IsNumber()
   @IsOptional()
-  country: Country;
+  country: number;
 
-  @IsOptional()
-  @IsString()
-  googleId?: string;
+  // @IsOptional()
+  // @IsString()
+  // googleId?: string;
 
-  @CreateDateColumn({ type: 'timestamp' })
-  created_at: Date;
+  // @CreateDateColumn({ type: 'timestamp' })
+  // created_at: Date;
 
   /*
   users: User[];

@@ -7,6 +7,7 @@ import * as fs from 'fs';
 
 @Injectable()
 export class CountryRepository {
+  
   constructor(
     @InjectRepository(Country)
     private readonly countryRepository: Repository<Country>,
@@ -26,5 +27,9 @@ export class CountryRepository {
     return await this.countryRepository.findOne({
       where: { phone_code: countryCode }
     })
+  }
+
+  async findCountryById(country_id: number) {
+    return await this.countryRepository.findOneBy({id: country_id})
   }
 }

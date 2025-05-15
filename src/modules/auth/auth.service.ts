@@ -191,6 +191,15 @@ export class AuthService {
       throw new BadRequestException(
         'Algo salio mal durante el proceso de registro. Por favor intente de nuevo',
       );
+    // Buscar el país por id
+    const countryEntity = admin.country
+      ? await this.countryService.findCountryById(admin.country)
+      : null;
+
+    if (admin.country && !countryEntity) {
+      throw new Error('País no encontrado');
+    }
+
     // const existCountry = await this.countryService.findCountry(
     //   admin.country.name,
     // );
@@ -207,9 +216,10 @@ export class AuthService {
       status: Status_User.ACTIVE,
       phone: admin.phone,
       created_at: new Date(),
-      // country: existCountry,
+      country: countryEntity || undefined,
       subscription,
     };
+    
     const saveAdmin = await this.adminRepository.save(newAdmin);
     subscription.admin = saveAdmin;
     await this.subscriptionRepository.save(subscription);
@@ -322,11 +332,11 @@ export class AuthService {
       throw new BadRequestException(
         'Parece que ya hay un usuario registrado con dicho email',
       );
-    const validCountryCode = await this.countryService.findByCode(
-      userStore.countryCode,
-    );
-    if (!validCountryCode)
-      throw new BadRequestException('No existe el codigo de area');
+    // const validCountryCode = await this.countryService.findByCode(
+    //   userStore.countryCode,
+    // );
+    // if (!validCountryCode)
+    //   throw new BadRequestException('No existe el codigo de area');
     // traigo las propiedades del administrador
     const admin = await this.adminsService.getAdminById(req.user.id);
 
