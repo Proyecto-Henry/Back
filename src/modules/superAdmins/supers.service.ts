@@ -12,6 +12,11 @@ export class SuperAdminService {
     private readonly supersRepo: Repository<Super_Admin>,
   ) {}
 
+  async getSuperAdmin() {
+    const supers = await this.supersRepo.find();
+    return supers.map(({password, ...supers}) => supers)
+  }
+
   async getSuperAdminByEmail(email: string) {
     return await this.supersRepo.findOne({
       where: { email },
