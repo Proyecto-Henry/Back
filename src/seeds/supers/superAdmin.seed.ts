@@ -24,9 +24,12 @@ export class SuperAdminSeeder implements OnModuleInit {
         const exist = await this.superAdminService.findByEmail(admin.email);
         if (!exist) {
           await this.superAdminService.register(admin);
-          console.log('✅ Precarga de super admin finalizada');
+          console.log('✅ Super admin creado');
+        } else {
+          console.log('ℹ️ Super admin ya agregado');
         }
       }
+      console.log('🦸‍♂️ Precarga de super admin finalizada');
     } catch (error) {
       console.log('❌ Ocurrio un problema con la precarga de super admin');
     }
