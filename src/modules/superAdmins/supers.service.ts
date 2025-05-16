@@ -23,19 +23,14 @@ export class SuperAdminService {
     });
   }
 
-  async findByEmail(email: string) {
-    return await this.supersRepo.findOne({
-      where: { email },
-    });
-  }
-
   async register(data: SuperAdminDto) {
-    const exist = await this.findByEmail(data.email);
+    const exist = await this.getSuperAdminByEmail(data.email);
     if (exist)
       throw new BadRequestException('Ya se encuentra registado con ese email');
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const newSuper = this.supersRepo.create({
       ...data,
+      email: data.email.trim().toLowerCase(),
       password: hashedPassword,
     });
     await this.supersRepo.save(newSuper);

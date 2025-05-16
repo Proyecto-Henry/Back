@@ -144,7 +144,9 @@ export class AuthService {
 
     // Ejecutar los chequeos en orden
     for (const check of loginChecks) {
+      console.log(loginUser.email)
       const userFound = await check.searchUser();
+      console.log(userFound)
       if (userFound) {
         user = userFound;
         role = check.role;
@@ -232,6 +234,7 @@ export class AuthService {
     const subscription = this.subscriptionService.addTrialSubscription();
     const newAdmin = {
       ...admin,
+      email: admin.email.trim().toLowerCase(),
       password: hashedPassword,
       status: Status_User.ACTIVE,
       phone: admin.phone,
@@ -256,6 +259,7 @@ export class AuthService {
     // creo el usuario
     const newUser = this.userRepository.create({
       ...user,
+      email: user.email.trim().toLowerCase(),
       password: hashedPassword,
       admin: admin, // administrador asociado al usuario
       status: Status_User.ACTIVE,
