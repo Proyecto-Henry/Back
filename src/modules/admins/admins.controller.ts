@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, Param, Patch, Post, Put } from '@nestjs/common';
 import { AdminsService } from './admins.service';
 import { CreateAdminWithGoogleDto } from './dtos/create-admin-google.dto';
 import { updateAdminDto } from './dtos/update-profile-admin.dto';
@@ -68,5 +68,14 @@ export class AdminsController {
   @Get()
   getAdminsForSuperAdmin() {
     return this.adminsService.getAdminsForSuperAdmin()
+  }
+
+  @Delete('/:admin_id')
+  deleteAccount(@Param('admin_id') admin_id: string) {
+    try {
+      return this.adminsService.deleteAccount(admin_id)
+    } catch (error) {
+      throw error
+    }
   }
 }
