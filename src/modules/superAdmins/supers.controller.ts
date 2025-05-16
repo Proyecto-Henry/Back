@@ -11,7 +11,11 @@ export class SuperAdminController {
 
     @Post('admin')
     registerSuperAdmin(@Body() data: SuperAdminDto) {
-        return this.superAdminService.register(data);
+        try {
+            return this.superAdminService.register(data);
+        } catch (error) {
+            throw error
+        }
     }
 
 }

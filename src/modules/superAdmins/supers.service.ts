@@ -35,6 +35,10 @@ export class SuperAdminService {
     });
     await this.supersRepo.save(newSuper);
     const { password, ...superWithoutPassword } = newSuper;
-    return superWithoutPassword;
+    const response = {
+      user: superWithoutPassword,
+      message: "Super-admin creado con éxito"
+    }
+    return response
   }
 }
