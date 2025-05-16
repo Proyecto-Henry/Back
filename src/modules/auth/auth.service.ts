@@ -137,6 +137,10 @@ export class AuthService {
     if (!validPassword) {
       throw new UnauthorizedException('❌Credenciales inválidas');
     }
+
+    if(userOrAdmin.status === Status_User.INACTIVE){
+      throw new UnauthorizedException('❌Su cuenta ha sido suspendida por violar los Términos de Uso.');
+    }
     
     const payload = {
       id: userOrAdmin.id,

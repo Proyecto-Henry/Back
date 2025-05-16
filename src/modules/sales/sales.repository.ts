@@ -17,17 +17,34 @@ export class SalesRepository {
   ) {}
 
   async GetSalesByStoreId(store_id: string) {
-    const sales = await this.salesRepository.find({
+    const result = await this.salesRepository.find({
       where: {
         store: {
           id: store_id,
         },
       },
       relations: {
-        sale_details: true,
+        sale_details: {
+          product: true
+        }
       },
     })
 
+    const sales = result.map((sale) => ({
+      id: sale.id,
+      date: sale.date,
+      total: sale.total,
+      sale_details: sale.sale_details.map((detail) => ({
+        quantity: detail.quantity,
+        product: {
+          name: detail.product.name,
+          price: detail.product.price,
+        },
+      }))
+    }));
+
+  
+    
     if(sales.length === 0 ) {
       throw new NotFoundException('Ventas no encontradas');
     }
@@ -96,18 +113,49 @@ export class SalesRepository {
     };
   }
 
-  async getSaleById(sale_id: string): Promise<Sale | null> {
-    return await this.salesRepository.findOne({
+  async getSaleById(sale_id: string) {
+    const result = await this.salesRepository.findOne({
       where: { id: sale_id },
       relations: ['sale_details', "sale_details.product"], 
     });
+
+    if(!result) throw new NotFoundException('Venta no encontrada');
+    const sale = {
+      id: result.id,
+      date: result.date,
+      total: result.total,
+      sale_details: result.sale_details.map((detail) => ({
+        quantity: detail.quantity,
+        product: {
+          name: detail.product.name,
+          price: detail.product.price,
+        },
+      })),
+    };
+    return sale
   }
 
-  async getAllSales(): Promise<Sale[]> {
-    return await this.salesRepository.find({
+  async getAllSales() {
+    
+    const result = await this.salesRepository.find({
       relations: ['sale_details', "sale_details.product", 'store'], 
       order: { date: 'DESC' },
     });
+
+    const sales = result.map((sale) => ({
+    id: sale.id,
+    date: sale.date,
+    total: sale.total,
+    sale_details: sale.sale_details.map((detail) => ({
+      quantity: detail.quantity,
+      product: {
+        name: detail.product.name,
+        price: detail.product.price,
+      },
+    }))
+  }));
+
+  return sales;
   }
 
 

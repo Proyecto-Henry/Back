@@ -58,4 +58,8 @@ export class AdminsService {
   getAdminsForSuperAdmin() {
     return this.adminsRepository.getAdminsForSuperAdmin()
   }
+
+  deleteAccount(admin_id: string) {
+    return this.adminsRepository.deleteAccount(admin_id)
+  }
 }
