@@ -39,7 +39,7 @@ export class AuthController {
   
   @ApiBearerAuth()
   @Post('signUpStore')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @UseGuards(AuthGuard, RolesGuard)
   signInStore(@Body() userAndStore: SignUpAuthDto, @Req() req: Request & { user: any } ) {
     return this.authService.buildStore(userAndStore, req);

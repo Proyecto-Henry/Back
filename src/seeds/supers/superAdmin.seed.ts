@@ -31,7 +31,7 @@ export class SuperAdminSeeder implements OnModuleInit {
       }
       console.log('🦸‍♂️ Precarga de super admin finalizada');
     } catch (error) {
-      console.log('❌ Ocurrio un problema con la precarga de super admin');
+      console.log('❌ Ocurrio un problema con la precarga de super admin', error);
     }
   }
 }
