@@ -144,9 +144,7 @@ export class AuthService {
 
     // Ejecutar los chequeos en orden
     for (const check of loginChecks) {
-      console.log(loginUser.email)
       const userFound = await check.searchUser();
-      console.log(userFound)
       if (userFound) {
         user = userFound;
         role = check.role;
