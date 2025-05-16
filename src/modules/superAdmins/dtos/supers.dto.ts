@@ -1,6 +1,9 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class SuperAdminDto {
+  /**
+   * @example nombre
+   */
   @IsString()
   name: string;
 
@@ -8,6 +11,7 @@ export class SuperAdminDto {
   @IsNotEmpty()
   email: string;
 
+  
   @IsString()
   @IsNotEmpty()
   password: string;
