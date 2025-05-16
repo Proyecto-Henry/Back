@@ -15,6 +15,7 @@ import { CountriesSeed } from './seeds/countries/countries.seed';
 import { Country } from './entities/Country.entity';
 import { FileModule } from './modules/files/files.module';
 import { SuperAdminModule } from './modules/superAdmins/supers.module';
+import { SuperAdminSeeder } from './seeds/supers/superAdmin.seed';
 
 @Module({
   imports: [
@@ -53,6 +54,6 @@ import { SuperAdminModule } from './modules/superAdmins/supers.module';
     SuperAdminModule
   ],
   controllers: [],
-  providers: [CountriesSeed],
+  providers: [CountriesSeed, SuperAdminSeeder],
 })
 export class AppModule {}

@@ -7,6 +7,7 @@ import { SuperAdminController } from "./supers.controller";
 @Module({
     imports: [TypeOrmModule.forFeature([Super_Admin])],
     providers: [SuperAdminService],
-    controllers: [SuperAdminController]
+    controllers: [SuperAdminController],
+    exports: [SuperAdminService]
 })
 export class SuperAdminModule {}

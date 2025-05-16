@@ -21,7 +21,7 @@ export const config = {
   // },
   entities: ['dist/**/*.entity{.js,.ts}'],
   migrations: ['dist/migrations/*{.js,.ts}'],
-  dropSchema: false,
+  dropSchema: true,
 };
 
 export default registerAs('typeorm', () => config);
