@@ -21,7 +21,7 @@ export class SuperAdminSeeder implements OnModuleInit {
       const superAdmins = JSON.parse(data);
 
       for (const admin of superAdmins) {
-        const exist = await this.superAdminService.findByEmail(admin.email);
+        const exist = await this.superAdminService.getSuperAdminByEmail(admin.email);
         if (!exist) {
           await this.superAdminService.register(admin);
           console.log('✅ Super admin creado');
