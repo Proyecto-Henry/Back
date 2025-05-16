@@ -28,6 +28,8 @@ import { StoresService } from '../stores/stores.service';
 import { Request } from 'express';
 import { Store } from 'src/entities/Store.entity';
 import { Status_Sub } from 'src/enums/status_sub.enum';
+import { Super_Admin } from 'src/entities/Super_Admin.entity';
+import { SuperAdminService } from '../superAdmins/supers.service';
 
 @Injectable()
 export class AuthService {
@@ -40,6 +42,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
     private readonly storesService: StoresService,
+    private readonly superAdminService: SuperAdminService,
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
     @InjectRepository(Admin)
@@ -117,55 +120,68 @@ export class AuthService {
   // }
 
   async login(loginUser: loginAuthDto) {
-    let userOrAdmin: Admin | User | null;
-    let role: Role;
+    let user: Admin | User | Super_Admin | null = null;
+    let role: Role | null = null;
 
-    userOrAdmin = await this.adminsService.getAdminByEmail(loginUser.email);
-    if (userOrAdmin) role = Role.ADMIN;
-    else {
-      userOrAdmin = await this.usersService.getUserByEmail(loginUser.email);
-      if (!userOrAdmin) {
-        throw new UnauthorizedException('❌Credenciales inválidas');
+    const loginChecks: {
+      searchUser: () => Promise<Admin | User | Super_Admin | null>;
+      role: Role;
+    }[] = [
+      {
+        searchUser: () =>
+          this.superAdminService.getSuperAdminByEmail(loginUser.email),
+        role: Role.SUPER_ADMIN,
+      },
+      {
+        searchUser: () => this.adminsService.getAdminByEmail(loginUser.email),
+        role: Role.ADMIN,
+      },
+      {
+        searchUser: () => this.usersService.getUserByEmail(loginUser.email),
+        role: Role.USER,
+      },
+    ];
+
+    // Ejecutar los chequeos en orden
+    for (const check of loginChecks) {
+      const userFound = await check.searchUser();
+      if (userFound) {
+        user = userFound;
+        role = check.role;
+        break;
       }
-      role = Role.USER;
     }
+
+    if (!user || !role)
+      throw new UnauthorizedException('❌Credenciales inválidas');
 
     const validPassword = await bcrypt.compare(
       loginUser.password,
-      userOrAdmin.password,
+      user.password,
     );
-    if (!validPassword) {
+
+    if (!validPassword)
       throw new UnauthorizedException('❌Credenciales inválidas');
-    }
-    
+
     const payload = {
-      id: userOrAdmin.id,
-      email: userOrAdmin.email,
-      status: userOrAdmin.status,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      status: (user as User | Admin).status,
       role: role,
     };
     const token = this.jwtService.sign(payload);
 
-    const message =
-      role === Role.ADMIN
-        ? `✅Login exitoso! Bienvenido ${(userOrAdmin as Admin).name}`
-        : `✅Login exitoso! Bienvenido`;
-
-    const user = {
-      name: (userOrAdmin as Admin).name,
-      id: userOrAdmin.id,
-      email: userOrAdmin.email,
-      role: role,
-    };
-
     // Verificar si la suscripción está vencida
-    if(role === Role.ADMIN) {
+    if (role === Role.ADMIN) {
       const subscription = await this.subscriptionRepository.findOne({
-      where: { admin: { email: userOrAdmin.email } }
+        where: { admin: { email: user.email } },
       });
 
       if (!subscription) {
-        throw new NotFoundException('Suscripción no encontrada para el administrador');
+        throw new NotFoundException(
+          'Suscripción no encontrada para el administrador',
+        );
       }
       const now = new Date();
       if (now > subscription.end_date) {
@@ -174,8 +190,8 @@ export class AuthService {
         await this.subscriptionRepository.save(subscription);
       }
     }
-
-    return { message, token, user };
+    const { password, ...userWithoutPassword } = user
+    return { user:userWithoutPassword, role, token }
   }
 
   //TODO ADMINISTRADOR
@@ -219,7 +235,7 @@ export class AuthService {
       country: countryEntity || undefined,
       subscription,
     };
-    
+
     const saveAdmin = await this.adminRepository.save(newAdmin);
     subscription.admin = saveAdmin;
     await this.subscriptionRepository.save(subscription);
@@ -253,66 +269,68 @@ export class AuthService {
   //TODO CREAR TIENDA
   async buildStore(userStore: SignUpAuthDto, req: Request & { user: any }) {
     // revisar el tipo de plan en la suscripción del administrador
-  const subscription = await this.subscriptionRepository.findOne({
-    where: { admin: { id: req.user.id } },
-  });
-
-  if (!subscription) {
-    throw new NotFoundException('Suscripción no encontrada para el administrador');
-  }
-
-  // Verificar si el admin tiene una suscripción de prueba
-  if (subscription.status === 'trial') {
-    // Contar las tiendas existentes del admin
-    const storeCount = await this.storesRepository.count({
-      where: { admin: { id: req.user.id }, status: true },
+    const subscription = await this.subscriptionRepository.findOne({
+      where: { admin: { id: req.user.id } },
     });
 
-    if (storeCount >= 1) {
-      throw new BadRequestException(
-        'Los administradores con suscripción de prueba solo pueden tener una tienda',
+    if (!subscription) {
+      throw new NotFoundException(
+        'Suscripción no encontrada para el administrador',
       );
     }
-  }
 
-  if (subscription.status === 'active' && subscription.plan === '1 store') {
-    // Contar las tiendas existentes del admin
-    const storeCount = await this.storesRepository.count({
-      where: { admin: { id: req.user.id }, status: true },
-    });
+    // Verificar si el admin tiene una suscripción de prueba
+    if (subscription.status === 'trial') {
+      // Contar las tiendas existentes del admin
+      const storeCount = await this.storesRepository.count({
+        where: { admin: { id: req.user.id }, status: true },
+      });
 
-    if (storeCount >= 1) {
-      throw new BadRequestException(
-        'Los administradores con suscripción \'1 store\' solo pueden tener una tienda',
-      );
+      if (storeCount >= 1) {
+        throw new BadRequestException(
+          'Los administradores con suscripción de prueba solo pueden tener una tienda',
+        );
+      }
     }
-  }
 
-  if (subscription.status === 'active' && subscription.plan === '2 stores') {
-    // Contar las tiendas existentes del admin
-    const storeCount = await this.storesRepository.count({
-      where: { admin: { id: req.user.id }, status: true },
-    });
+    if (subscription.status === 'active' && subscription.plan === '1 store') {
+      // Contar las tiendas existentes del admin
+      const storeCount = await this.storesRepository.count({
+        where: { admin: { id: req.user.id }, status: true },
+      });
 
-    if (storeCount >= 2) {
-      throw new BadRequestException(
-        'Los administradores con suscripción \'2 stores\' solo pueden tener 2 tiendas',
-      );
+      if (storeCount >= 1) {
+        throw new BadRequestException(
+          "Los administradores con suscripción '1 store' solo pueden tener una tienda",
+        );
+      }
     }
-  }
 
-  if (subscription.status === 'active' && subscription.plan === '4 stores') {
-    // Contar las tiendas existentes del admin
-    const storeCount = await this.storesRepository.count({
-      where: { admin: { id: req.user.id }, status: true },
-    });
+    if (subscription.status === 'active' && subscription.plan === '2 stores') {
+      // Contar las tiendas existentes del admin
+      const storeCount = await this.storesRepository.count({
+        where: { admin: { id: req.user.id }, status: true },
+      });
 
-    if (storeCount >= 4) {
-      throw new BadRequestException(
-        'Los administradores con suscripción \'4 stores\' solo pueden tener 4 tiendas',
-      );
+      if (storeCount >= 2) {
+        throw new BadRequestException(
+          "Los administradores con suscripción '2 stores' solo pueden tener 2 tiendas",
+        );
+      }
     }
-  }
+
+    if (subscription.status === 'active' && subscription.plan === '4 stores') {
+      // Contar las tiendas existentes del admin
+      const storeCount = await this.storesRepository.count({
+        where: { admin: { id: req.user.id }, status: true },
+      });
+
+      if (storeCount >= 4) {
+        throw new BadRequestException(
+          "Los administradores con suscripción '4 stores' solo pueden tener 4 tiendas",
+        );
+      }
+    }
 
     // controlo que la direccion no se repita
     const existAddress = await this.storesService.findAddress(

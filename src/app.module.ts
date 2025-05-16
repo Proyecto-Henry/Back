@@ -14,6 +14,7 @@ import { CountryModule } from './modules/country/country.module';
 import { CountriesSeed } from './seeds/countries/countries.seed';
 import { Country } from './entities/Country.entity';
 import { FileModule } from './modules/files/files.module';
+import { SuperAdminModule } from './modules/superAdmins/supers.module';
 
 @Module({
   imports: [
@@ -48,7 +49,8 @@ import { FileModule } from './modules/files/files.module';
     SubscriptionModule,
     StoreModule,
     CountryModule,
-    FileModule
+    FileModule,
+    SuperAdminModule
   ],
   controllers: [],
   providers: [CountriesSeed],
