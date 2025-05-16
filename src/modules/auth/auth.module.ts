@@ -20,9 +20,11 @@ import { StoresService } from '../stores/stores.service';
 import { StoresRepository } from '../stores/stores.repository';
 import { Store } from 'src/entities/Store.entity';
 import { CountryModule } from '../country/country.module';
+import { SuperAdminService } from '../superAdmins/supers.service';
+import { Super_Admin } from 'src/entities/Super_Admin.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Admin, User, Country, Subscription, Store])],
+  imports: [TypeOrmModule.forFeature([Admin, User, Country, Subscription, Store, Super_Admin])],
   providers: [
     AdminsService,
     AdminsRepository,
@@ -37,6 +39,7 @@ import { CountryModule } from '../country/country.module';
     StripeService,
     StoresService,
     StoresRepository,
+    SuperAdminService
   ],
   controllers: [AuthController],
   exports: [AdminsService],
