@@ -41,4 +41,8 @@ export class SubscriptionsService {
   handleWebhook(rawBody: any, signature: string) {
     return this.subscriptionsRepository.handleWebhook(rawBody, signature);
   }
+
+  getSubscriptionByUserId(user_id: string) {
+    return this.subscriptionsRepository.getSubscriptionByUserId(user_id)
+  }
 }

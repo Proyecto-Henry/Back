@@ -43,4 +43,12 @@ export class UsersRepository {
       await this.usersRepository.save(user)
     }
   }
+
+  async getUserWithAdmin(user_id: string) {
+    const user = await this.usersRepository.findOne({
+    where: { id: user_id },
+    relations: { admin: true },
+  })
+  return user
+  }
 }

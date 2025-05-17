@@ -17,6 +17,7 @@ import { User } from 'src/entities/User.entity';
 import { Product } from 'src/entities/Product.entity';
 import { Sale } from 'src/entities/Sale.entity';
 import { Sale_Detail } from 'src/entities/Sale_Detail.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AdminsRepository {
@@ -25,7 +26,8 @@ export class AdminsRepository {
     @InjectRepository(Admin) private adminsRepository: Repository<Admin>,
     @InjectRepository(Country) private countrysRepository: Repository<Country>,
     private dataSource: DataSource,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly usersService: UsersService
   ) {}
 
   async getAllAdmins() {
@@ -247,5 +249,10 @@ export class AdminsRepository {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getAdminByUserId(user_id: string) {
+  const user = await this.usersService.getUserWithAdmin(user_id)
+  return user?.admin
   }
 }
