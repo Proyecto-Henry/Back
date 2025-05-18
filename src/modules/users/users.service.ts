@@ -65,4 +65,8 @@ export class UsersService {
   deleteUserByStoreId(store_id: string) {
     return this.usersRepo.deleteUserByAdminId(store_id)
   }
+
+  getUserWithAdmin(user_id: string) {
+    return this.usersRepo.getUserWithAdmin(user_id)
+  }
 }

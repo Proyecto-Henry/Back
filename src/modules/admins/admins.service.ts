@@ -62,4 +62,8 @@ export class AdminsService {
   deleteAccount(admin_id: string) {
     return this.adminsRepository.deleteAccount(admin_id)
   }
+
+  getAdminByUserId(user_id: string) {
+    return this.adminsRepository.getAdminByUserId(user_id)
+  }
 }

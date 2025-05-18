@@ -20,10 +20,19 @@ import { createSubscriptionDto } from './dtos/create-subscription.dto';
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
-  @Get(':admin_id')
+  @Get('admin/:admin_id')
   getSubscriptionByAdminId(@Param('admin_id') admin_id: string) {
     try {
       return this.subscriptionsService.getSubscriptionByAdminId(admin_id);
+    } catch (error) {
+      throw error
+    }
+  }
+
+  @Get('user/:user_id')
+  getSubscriptionByUserId(@Param('user_id') user_id: string) {
+    try {
+      return this.subscriptionsService.getSubscriptionByUserId(user_id);
     } catch (error) {
       throw error
     }

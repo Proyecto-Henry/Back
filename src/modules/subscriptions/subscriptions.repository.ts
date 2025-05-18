@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { StripeService } from 'src/common/stripe.service';
 import { changePlanDto } from './dtos/change-plan.dto';
 import { createSubscriptionDto } from './dtos/create-subscription.dto';
+import { AdminsService } from '../admins/admins.service';
 
 @Injectable()
 export class SubscriptionsRepository {
@@ -15,6 +16,7 @@ export class SubscriptionsRepository {
     @InjectRepository(Subscription)
     private subscriptionsRepository: Repository<Subscription>,
     private readonly stripeService: StripeService,
+    private readonly adminsService: AdminsService
   ) {}
 
   addTrialSubscription() {
@@ -33,11 +35,34 @@ export class SubscriptionsRepository {
   }
 
   async getSubscriptionByAdminId(adminId: string) {
-    return this.subscriptionsRepository.findOne({
+    const subscription = await this.subscriptionsRepository.findOne({
       where: { admin: { id: adminId } },
       relations: ['admin'],
     });
+    if (!subscription) {
+       throw new NotFoundException('No se encontró la suscripción');
+    }
+
+    const {
+      admin: {
+        password,
+        google_id,
+        phone,
+        img_profile,
+        status,
+        created_at,
+        ...cleanAdmin
+      },
+      ...restOfSubscription
+    } = subscription;
+
+    const cleanedSubscription = {
+      ...restOfSubscription,
+      admin: cleanAdmin
+    };
+    return cleanedSubscription
   }
+
   createSubscription(data: createSubscriptionDto) {
     return this.stripeService.createSubscription(data)
   }
@@ -57,6 +82,19 @@ export class SubscriptionsRepository {
 
   handleWebhook(rawBody: any, signature: string) {
     return this.stripeService.handleWebhook(rawBody, signature);
+  }
+
+  async getSubscriptionByUserId(user_id: string) {
+    const result = await this.adminsService.getAdminByUserId(user_id)
+    if(!result){
+      throw new NotFoundException('No se encontró al administrador');
+    }
+    const subscription = await this.getSubscriptionByAdminId(result.id)
+    if(!subscription) {
+      throw new NotFoundException('No se encontró la suscripción');
+    }
+    const { admin, ...subscriptionWithoutAdmin } = subscription;
+    return subscriptionWithoutAdmin
   }
 }
 
