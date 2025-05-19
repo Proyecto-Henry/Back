@@ -37,4 +37,12 @@ export class SubscriptionsService {
   changePlan(data: changePlanDto) {
     return this.subscriptionsRepository.changePlan(data)
   }
+
+  handleWebhook(rawBody: any, signature: string) {
+    return this.subscriptionsRepository.handleWebhook(rawBody, signature);
+  }
+
+  getSubscriptionByUserId(user_id: string) {
+    return this.subscriptionsRepository.getSubscriptionByUserId(user_id)
+  }
 }

@@ -17,13 +17,35 @@ export class SalesRepository {
   ) {}
 
   async GetSalesByStoreId(store_id: string) {
-    const sales = await this.salesRepository.findOne({
-      where: { id: store_id },
+    const result = await this.salesRepository.find({
+      where: {
+        store: {
+          id: store_id,
+        },
+      },
       relations: {
-        sale_details: true 
-      }
+        sale_details: {
+          product: true
+        }
+      },
     })
-    if(!sales) {
+
+    const sales = result.map((sale) => ({
+      id: sale.id,
+      date: sale.date,
+      total: sale.total,
+      sale_details: sale.sale_details.map((detail) => ({
+        quantity: detail.quantity,
+        product: {
+          name: detail.product.name,
+          price: detail.product.price,
+        },
+      }))
+    }));
+
+  
+    
+    if(sales.length === 0 ) {
       throw new NotFoundException('Ventas no encontradas');
     }
     return sales
@@ -49,10 +71,31 @@ export class SalesRepository {
       total: total,
       sale_details: sale_details.map((item) => ({
         product: { id: item.product_id},
-        quantity: item.quantity
+        quantity: item.quantity,
       })),
       store: { id: saleData.store_id}
     })
+
+    const saleWithProduct = await this.salesRepository.findOne({
+      where: { id: sale.id },
+      relations: ['sale_details', 'sale_details.product'],
+    });
+    if(!saleWithProduct) {
+      throw new NotFoundException('Ventas no encontrada');
+    }
+
+    const response = {
+      id: saleWithProduct.id,
+      date: saleWithProduct.date,
+      total: saleWithProduct.total,
+      sale_details: saleWithProduct.sale_details.map((detail) => ({
+        quantity: detail.quantity,
+        product: {
+          name: detail.product.name,
+          price: detail.product.price,
+        },
+      })),
+    };
 
     // actualizamos el stock de los productos vendidos
     for (const item of sale_details) {
@@ -62,23 +105,60 @@ export class SalesRepository {
         await this.productsService.updateProductStock(product.id, product.stock);
       }
     }
+
+    return {
+        message: 'Venta realizada con éxito',
+        success: true,
+        sale: response
+    };
+  }
+
+  async getSaleById(sale_id: string) {
+    const result = await this.salesRepository.findOne({
+      where: { id: sale_id },
+      relations: ['sale_details', "sale_details.product"], 
+    });
+
+    if(!result) throw new NotFoundException('Venta no encontrada');
+    const sale = {
+      id: result.id,
+      date: result.date,
+      total: result.total,
+      sale_details: result.sale_details.map((detail) => ({
+        quantity: detail.quantity,
+        product: {
+          name: detail.product.name,
+          price: detail.product.price,
+        },
+      })),
+    };
     return sale
   }
 
-  async getSaleById(sale_id: string): Promise<Sale | null> {
-    return await this.salesRepository.findOne({
-      where: { id: sale_id, is_active:true },
-      relations: ['sale_details', "sale_details.product", 'store'], 
-    });
-  }
+  async getAllSales() {
+  const result = await this.salesRepository.find({
+    where: { is_active: true },
+    relations: ['sale_details', 'sale_details.product', 'store'],
+    order: { date: 'DESC' },
+  });
 
-  async getAllSales(): Promise<Sale[]> {
-    return await this.salesRepository.find({
-      where: { is_active: true},
-      relations: ['sale_details', "sale_details.product", 'store'], 
-      order: { date: 'DESC' },
-    });
-  }
+  const sales = result.map((sale) => ({
+    id: sale.id,
+    date: sale.date,
+    total: sale.total,
+    is_active: sale.is_active,
+    store: sale.store,
+    sale_details: sale.sale_details.map((detail) => ({
+      quantity: detail.quantity,
+      product: {
+        name: detail.product.name,
+        price: detail.product.price,
+      },
+    })),
+  }));
+
+  return sales;
+}
 
 
   async disableSale(sale_id: string){
@@ -97,10 +177,52 @@ export class SalesRepository {
     return await this.salesRepository.save(sale);
   }
 
-  
-  // async deleteSale(sale_id: string): Promise<number> {
-  //   const result = await this.salesRepository.delete(sale_id);
-  //   return result.affected ?? 0;
-  // }
+  async deleteSale(sale_id: string) {
+    const queryRunner = this.salesRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
+    try {
+      // Obtener la venta con sus detalles y productos asociados
+      const sale = await queryRunner.manager.findOne(Sale, {
+        where: { id: sale_id },
+        relations: { sale_details: { product: true } },
+      });
+
+      if (!sale) {
+        throw new NotFoundException('Venta no encontrada');
+      }
+
+      // Restaurar el stock de los productos
+      for (const detail of sale.sale_details) {
+        const product = detail.product;
+        if (!product) {
+          throw new Error(`Producto no encontrado`);
+        }
+        // Incrementar el stock del producto según la cantidad vendida
+        product.stock = (product.stock) + detail.quantity;
+        // Guardar el producto actualizado
+        await queryRunner.manager.save(Product, product);
+        // Eliminar la venta con sus Sale_Detail
+        const result = await queryRunner.manager.delete(Sale, { id: sale_id });
+        // Confirmar la transacción
+        await queryRunner.commitTransaction();
+        return result.affected ?? 0;
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release()
+    }
+    
+  }
+
+  async DeleteSalesByStoreId(store_id: string) {
+    await this.salesRepository.delete({ store: { id: store_id } });
+    return {
+      success: true,
+      message: "Ventas eliminadas exitosamente"
+    }
+  }
 }

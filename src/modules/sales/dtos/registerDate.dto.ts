@@ -1,5 +1,6 @@
 import { IsUUID, IsDateString, IsPositive, IsInt, ArrayNotEmpty, ValidateNested, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 class SaleDetailDto {
   @IsUUID()
@@ -11,6 +12,7 @@ class SaleDetailDto {
 }
 
 export class RegisterSaleDto {
+  @ApiProperty({ example: '2025-05-15 10:38:28.104' })
   @IsOptional()
   @IsDateString() //IsDateString para validar formato ISO
   date: string;

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { SignUpAuthDto } from './dtos/signup-auth.dto';
@@ -26,6 +27,9 @@ import { payloadGoogle } from './dtos/signinGoogle.dto';
 import { StoresService } from '../stores/stores.service';
 import { Request } from 'express';
 import { Store } from 'src/entities/Store.entity';
+import { Status_Sub } from 'src/enums/status_sub.enum';
+import { Super_Admin } from 'src/entities/Super_Admin.entity';
+import { SuperAdminService } from '../superAdmins/supers.service';
 
 @Injectable()
 export class AuthService {
@@ -38,6 +42,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
     private readonly storesService: StoresService,
+    private readonly superAdminService: SuperAdminService,
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
     @InjectRepository(Admin)
@@ -115,45 +120,84 @@ export class AuthService {
   // }
 
   async login(loginUser: loginAuthDto) {
-    let userOrAdmin: Admin | User | null;
-    let role: Role;
+    let user: Admin | User | Super_Admin | null = null;
+    let role: Role | null = null;
 
-    userOrAdmin = await this.adminsService.getAdminByEmail(loginUser.email);
-    if (userOrAdmin) role = Role.ADMIN;
-    else {
-      userOrAdmin = await this.usersService.getUserByEmail(loginUser.email);
-      if (!userOrAdmin) {
-        throw new UnauthorizedException('❌Credenciales inválidas');
+    const loginChecks: {
+      searchUser: () => Promise<Admin | User | Super_Admin | null>;
+      role: Role;
+    }[] = [
+      {
+        searchUser: () =>
+          this.superAdminService.getSuperAdminByEmail(loginUser.email),
+        role: Role.SUPER_ADMIN,
+      },
+      {
+        searchUser: () => this.adminsService.getAdminByEmail(loginUser.email),
+        role: Role.ADMIN,
+      },
+      {
+        searchUser: () => this.usersService.getUserByEmail(loginUser.email),
+        role: Role.USER,
+      },
+    ];
+
+    // Ejecutar los chequeos en orden
+    for (const check of loginChecks) {
+      console.log(loginUser.email)
+      const userFound = await check.searchUser();
+      console.log(userFound)
+      if (userFound) {
+        user = userFound;
+        role = check.role;
+        break;
       }
-      role = Role.USER;
     }
 
-    if (await bcrypt.compare(userOrAdmin.password, loginUser.password)) {
+    if (!user || !role)
       throw new UnauthorizedException('❌Credenciales inválidas');
-    }
 
+    const validPassword = await bcrypt.compare(
+      loginUser.password,
+      user.password,
+    );
+
+    if (!validPassword)
+      throw new UnauthorizedException('❌Credenciales inválidas');
+
+    if((user as Admin | User).status === Status_User.INACTIVE){
+      throw new UnauthorizedException('❌Su cuenta ha sido suspendida por violar los Términos de Uso.');
+    }
+    
     const payload = {
-      id: userOrAdmin.id,
-      email: userOrAdmin.email,
-      status: userOrAdmin.status,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      status: (user as User | Admin).status,
+      role: role,
     };
     const token = this.jwtService.sign(payload);
 
-    const response = {
-      message:
-        role === Role.ADMIN
-          ? `✅Login exitoso! Bienvenido ${(userOrAdmin as Admin).name}`
-          : '✅Login exitoso! Bienvenido',
-    };
+    // Verificar si la suscripción está vencida
+    if (role === Role.ADMIN) {
+      const subscription = await this.subscriptionRepository.findOne({
+        where: { admin: { email: user.email } },
+      });
 
-    const user = {
-      id: userOrAdmin.id,
-      email: userOrAdmin.email,
-      role: role
+      if (!subscription) {
+        throw new NotFoundException(
+          'Suscripción no encontrada para el administrador',
+        );
+      }
+      const now = new Date();
+      if (now > subscription.end_date) {
+        // Actualizar el estado de la suscripción a 'paused'
+        subscription.status = Status_Sub.PAUSED;
+        await this.subscriptionRepository.save(subscription);
+      }
     }
-
-    return { response, token, user };
-
+    const { password, ...userWithoutPassword } = user
+    return { user:userWithoutPassword, role, token }
   }
 
   //TODO ADMINISTRADOR
@@ -169,6 +213,15 @@ export class AuthService {
       throw new BadRequestException(
         'Algo salio mal durante el proceso de registro. Por favor intente de nuevo',
       );
+    // Buscar el país por id
+    const countryEntity = admin.country
+      ? await this.countryService.findCountryById(admin.country)
+      : null;
+
+    if (admin.country && !countryEntity) {
+      throw new Error('País no encontrado');
+    }
+
     // const existCountry = await this.countryService.findCountry(
     //   admin.country.name,
     // );
@@ -181,17 +234,19 @@ export class AuthService {
     const subscription = this.subscriptionService.addTrialSubscription();
     const newAdmin = {
       ...admin,
+      email: admin.email.trim().toLowerCase(),
       password: hashedPassword,
       status: Status_User.ACTIVE,
       phone: admin.phone,
       created_at: new Date(),
-      // country: existCountry,
+      country: countryEntity || undefined,
       subscription,
     };
+
     const saveAdmin = await this.adminRepository.save(newAdmin);
     subscription.admin = saveAdmin;
     await this.subscriptionRepository.save(subscription);
-    await this.mailService.sendNotificationMail(newAdmin, admin.password);
+    await this.mailService.sendNotificationMail(newAdmin.email, admin.password);
     return {
       message: 'Usuario registrado con éxito, chequee su casilla de correo',
     };
@@ -199,40 +254,115 @@ export class AuthService {
 
   //TODO REGISTRO DE USUARIO/VENDEDOR
   async signUpUser(user: SignUpAuthDto, admin: any, newStore: any) {
-    // controlo que el usuario no exista
-    const userAlreadyRegister = await this.usersService.getUserByEmail(
-      user.email,
-    );
-    if (userAlreadyRegister)
-      throw new BadRequestException(
-        'Parece que ya hay un usuario registrado con dicho email',
-      );
     const hashedPassword = await bcrypt.hash(user.password, 10);
 
     // creo el usuario
     const newUser = this.userRepository.create({
       ...user,
+      email: user.email.trim().toLowerCase(),
       password: hashedPassword,
-      admin: admin,
+      admin: admin, // administrador asociado al usuario
       status: Status_User.ACTIVE,
-      store: newStore,
+      store: newStore, // tienda que administrara
     });
     const usuario = await this.usersService.save(newUser);
     console.log('👦usuario creado: ', usuario);
+
+    // envio de notificacion por email
+    await this.mailService.sendNotificationMail(usuario.email, user.password);
+
     return usuario;
   }
 
   //TODO CREAR TIENDA
   async buildStore(userStore: SignUpAuthDto, req: Request & { user: any }) {
+    // revisar el tipo de plan en la suscripción del administrador
+    const subscription = await this.subscriptionRepository.findOne({
+      where: { admin: { id: req.user.id } },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException(
+        'Suscripción no encontrada para el administrador',
+      );
+    }
+
+    // Verificar si el admin tiene una suscripción de prueba
+    if (subscription.status === 'trial') {
+      // Contar las tiendas existentes del admin
+      const storeCount = await this.storesRepository.count({
+        where: { admin: { id: req.user.id }, status: true },
+      });
+
+      if (storeCount >= 1) {
+        throw new BadRequestException(
+          'Los administradores con suscripción de prueba solo pueden tener una tienda',
+        );
+      }
+    }
+
+    if (subscription.status === 'active' && subscription.plan === '1 store') {
+      // Contar las tiendas existentes del admin
+      const storeCount = await this.storesRepository.count({
+        where: { admin: { id: req.user.id }, status: true },
+      });
+
+      if (storeCount >= 1) {
+        throw new BadRequestException(
+          "Los administradores con suscripción '1 store' solo pueden tener una tienda",
+        );
+      }
+    }
+
+    if (subscription.status === 'active' && subscription.plan === '2 stores') {
+      // Contar las tiendas existentes del admin
+      const storeCount = await this.storesRepository.count({
+        where: { admin: { id: req.user.id }, status: true },
+      });
+
+      if (storeCount >= 2) {
+        throw new BadRequestException(
+          "Los administradores con suscripción '2 stores' solo pueden tener 2 tiendas",
+        );
+      }
+    }
+
+    if (subscription.status === 'active' && subscription.plan === '4 stores') {
+      // Contar las tiendas existentes del admin
+      const storeCount = await this.storesRepository.count({
+        where: { admin: { id: req.user.id }, status: true },
+      });
+
+      if (storeCount >= 4) {
+        throw new BadRequestException(
+          "Los administradores con suscripción '4 stores' solo pueden tener 4 tiendas",
+        );
+      }
+    }
+
     // controlo que la direccion no se repita
     const existAddress = await this.storesService.findAddress(
       userStore.address,
     );
+
     if (existAddress)
       throw new BadRequestException(
         'Parece que ya hay una tienda registrada en esa direccion',
       );
 
+    // controlo que el usuario no exista
+    const userAlreadyRegister = await this.usersService.getUserByEmail(
+      userStore.email,
+    );
+    if (userAlreadyRegister)
+      throw new BadRequestException(
+        'Parece que ya hay un usuario registrado con dicho email',
+      );
+    // const validCountryCode = await this.countryService.findByCode(
+    //   userStore.countryCode,
+    // );
+    // if (!validCountryCode)
+    //   throw new BadRequestException('No existe el codigo de area');
     // traigo las propiedades del administrador
     const admin = await this.adminsService.getAdminById(req.user.id);
 
@@ -254,8 +384,15 @@ export class AuthService {
 
     return {
       message: `👍 se registro su nueva tienda ${store.name}`,
-      store: store,
-      user: user,
+      store: {
+        id: store.id,
+        name: store.name,
+        address: store.address,
+      },
+      user: {
+        id: user.id,
+        email: user.email,
+      },
     };
   }
 
@@ -276,18 +413,29 @@ export class AuthService {
       const result = await this.adminRepository.save(admin);
       subscription.admin = result;
       await this.subscriptionRepository.save(subscription);
-      await this.mailService.sendNotificationMail(
-        admin,
-        'No ha registrado una password',
-      );
+      await this.mailService.sendNotificationMail(admin.email);
       return {
         message: 'Usuario registrado con éxito, chequee su casilla de correo',
-        user: admin
       };
     } else if (googleId === admin.google_id) {
+      const payload = {
+        id: admin.id,
+        email: admin.email,
+        status: admin.status,
+        role: Role.ADMIN,
+      };
+      const token = this.jwtService.sign(payload);
+
+      const user = {
+        name: admin.name,
+        id: admin.id,
+        email: admin.email,
+        role: Role.ADMIN,
+      };
       return {
         message: `✅Login exitoso! Bienvenido ${(admin as Admin).name}`,
-        user: admin,
+        token: token,
+        user: user,
       };
     } else {
       throw new UnauthorizedException('❌Credenciales inválidas');

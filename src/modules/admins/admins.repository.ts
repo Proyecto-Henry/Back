@@ -12,15 +12,46 @@ import { Store } from 'src/entities/Store.entity';
 import { DataSource } from 'typeorm';
 import { CreateStoreResponseDto } from '../stores/dtos/CreateStoreResponse.dto';
 import { payloadGoogle } from '../auth/dtos/signinGoogle.dto';
+import { Subscription } from 'src/entities/Subscription.entity';
+import { User } from 'src/entities/User.entity';
+import { Product } from 'src/entities/Product.entity';
+import { Sale } from 'src/entities/Sale.entity';
+import { Sale_Detail } from 'src/entities/Sale_Detail.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AdminsRepository {
+  
   constructor(
     @InjectRepository(Admin) private adminsRepository: Repository<Admin>,
     @InjectRepository(Country) private countrysRepository: Repository<Country>,
     private dataSource: DataSource,
     private readonly jwtService: JwtService,
+    private readonly usersService: UsersService
   ) {}
+
+  async getAllAdmins() {
+    const admin = await this.adminsRepository.find({
+      relations: ['stores'],
+      select: ['id', 'email', 'name', 'stores']
+    })
+    return admin ? admin : 'No se encontraron administradores';
+  }
+  
+  async getStoresByAdmin(adminId: string) {
+    const admin = await this.adminsRepository.findOne({
+      where: { id: adminId },
+      relations: ["stores"],
+      select: ['id', 'stores', 'name', 'status',]
+    });
+    
+    if (!admin) {
+      return 'Administrador no encontrado';
+    }
+    // Filtrar stores con status: true
+    admin.stores = admin.stores.filter((store) => store.status === true);
+    return admin.stores.length ? admin.stores : 'No tiene tiendas asociadas';
+  }
 
   async getAdminByEmail(email: string) {
     return await this.adminsRepository.findOne({
@@ -29,11 +60,42 @@ export class AdminsRepository {
   }
 
   async getAdminById(admin_id: string) {
-    const admin = await this.adminsRepository.findOneBy({ id: admin_id });
-    if (!admin) {
+    const result = await this.adminsRepository.findOne({
+      where: { id: admin_id },
+      relations: ['stores', 'subscription'],
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true,
+        stores: true,
+        subscription: {
+          id: true,
+          status: true,
+          start_date: true,
+          plan: true
+        },
+      },
+    });
+
+
+    if (!result) {
       throw new NotFoundException('Admin no encontrado');
     }
-    return admin;
+
+    const admin = {
+      id: result.id,
+      name: result.name,
+      email: result.email,
+      status: result.status,
+      storesCount: result.stores.length,
+      subscription: {
+        status: result.subscription.status,
+        start_date: result.subscription.start_date,
+        plan: result.subscription.plan
+      },
+    };
+    return admin
   }
 
   async findAdminById(adminId: string) {
@@ -49,16 +111,23 @@ export class AdminsRepository {
   }
 
   async disableAdmin(admin_id: string) {
-    const admin = await this.getAdminById(admin_id);
+    const admin = await this.adminsRepository.findOne({
+      where: { id: admin_id },
+      relations: ['users'],
+    })
+    if(!admin) throw new NotFoundException('No se encontro al administrador');
     if (admin.status === Status_User.ACTIVE) {
       admin.status = Status_User.INACTIVE;
+      admin.users.forEach((user) => {user.status = Status_User.INACTIVE});
       const result = await this.adminsRepository.save(admin);
+
       return {
         message: 'Usuario desactivado con éxito',
         status: result.status,
       };
     } else {
       admin.status = Status_User.ACTIVE;
+      admin.users.forEach((user) => {user.status = Status_User.ACTIVE});
       const result = await this.adminsRepository.save(admin);
       return {
         message: 'Usuario activado con éxito',
@@ -126,6 +195,7 @@ export class AdminsRepository {
           id: true,
           status: true,
           start_date: true,
+          plan: true
         },
       },
     });
@@ -139,9 +209,50 @@ export class AdminsRepository {
       subscription: {
         status: admin.subscription.status,
         start_date: admin.subscription.start_date,
+        plan: admin.subscription.plan
       },
     }));
 
     return admins;
+  }
+
+  async deleteAccount(admin_id: string) {
+    const queryRunner = this.adminsRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Eliminar las suscripciones asociadas al admin
+      await queryRunner.manager.delete(Subscription, { admin: { id: admin_id } });
+
+      // Eliminar las tiendas asociadas al admin
+      const stores = await queryRunner.manager.find(Store, { where: { admin: { id: admin_id } } });
+      for (const store of stores) {
+        await queryRunner.manager.delete(Sale, { store: store.id });
+        await queryRunner.manager.delete(Product, { store: store.id });
+      }
+      await queryRunner.manager.delete(Store, { admin: { id: admin_id } });
+      //eliminar el user
+      await queryRunner.manager.delete(User, { admin: { id: admin_id } });
+      //eliminar el admin
+      await queryRunner.manager.delete(Admin, { id: admin_id });
+
+      await queryRunner.commitTransaction();
+
+      return {
+      success: true,
+      message: "Cuenta eliminada con éxito"
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new Error(`Error al eliminar la cuenta: ${error.message}`);
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getAdminByUserId(user_id: string) {
+  const user = await this.usersService.getUserWithAdmin(user_id)
+  return user?.admin
   }
 }

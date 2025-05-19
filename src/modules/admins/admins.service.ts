@@ -14,10 +14,17 @@ import { payloadGoogle } from '../auth/dtos/signinGoogle.dto';
 @Injectable()
 export class AdminsService {
   
-  
   constructor(
     private readonly adminsRepository: AdminsRepository,
   ) {}
+
+  getAllAdmins() {
+    return this.adminsRepository.getAllAdmins();
+  }
+  
+  getStoresByAdmin(adminId: string) {
+    return this.adminsRepository.getStoresByAdmin(adminId);
+  }
   
   async getAdminByEmail(email: string) {
     return this.adminsRepository.getAdminByEmail(email);
@@ -50,5 +57,13 @@ export class AdminsService {
   
   getAdminsForSuperAdmin() {
     return this.adminsRepository.getAdminsForSuperAdmin()
+  }
+
+  deleteAccount(admin_id: string) {
+    return this.adminsRepository.deleteAccount(admin_id)
+  }
+
+  getAdminByUserId(user_id: string) {
+    return this.adminsRepository.getAdminByUserId(user_id)
   }
 }

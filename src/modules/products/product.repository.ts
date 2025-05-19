@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from 'src/entities/Product.entity';
 import { In, Repository } from 'typeorm';
@@ -7,13 +7,23 @@ import { CreateProductDto } from './dtos/create-product.dto';
 import { Store } from 'src/entities/Store.entity';
 import { error } from 'console';
 import { UpdateProductDto } from './dtos/update-product.dto';
+import { UUID } from 'crypto';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 @Injectable()
 export class ProductsRepository {
   constructor(
     @InjectRepository(Product) private productsRepository: Repository<Product>,
     @InjectRepository(Store) private storeRepository: Repository<Store>,
+    private readonly subscriptionsService: SubscriptionsService
   ) {}
+  
+  // async getStockByStore(product_id: string[]) {
+  //   return await this.productsRepository.find({
+  //     where: { id: In(product_id) },
+  //     relations: ['store'],
+  //   });
+  // }
 
   async getProductsById(saleData: RegisterSaleDto) {
     const sale_details = saleData.sale_details;
@@ -38,7 +48,28 @@ export class ProductsRepository {
     });
 
     if (!store) {
-      throw new error('Store not found');
+      throw new error('Tienda no encontrada');
+    }
+
+    // Buscar la suscripción del administrador
+    const subscription = await this.subscriptionsService.getSubscriptionByAdminId(createProductDto.admin_id);
+
+    if (!subscription) {
+      throw new NotFoundException('Suscripción no encontrada para el administrador');
+    }
+
+    // Si la suscripción es de prueba, aplicar restricciones
+    if (subscription.status === 'trial') {
+      // Contar los productos activos (status: true) de la tienda
+      const productCount = await this.productsRepository.count({
+        where: { store: { id: store.id }, status: true },
+      });
+
+      if (productCount >= 10) {
+        throw new BadRequestException(
+          'Los administradores con suscripción de prueba solo pueden cargar hasta 10 productos en su tienda',
+        );
+      }
     }
 
     const newProduct = this.productsRepository.create({
@@ -49,20 +80,24 @@ export class ProductsRepository {
     return this.productsRepository.save(newProduct);
   }
 
-  findProductsByStoreId(store_id: string): Promise<Product[]> {
-    return this.productsRepository.find({
+  async findProductsByStoreId(store_id: string): Promise<Product[]> {
+    const products = await this.productsRepository.find({
       where: {
-        store: { id: store_id },
+        store: { id: store_id, status: true },
+        status: true, // Filtrar productos con status: true
       },
     });
+    return products
   }
 
   async removeProduct(product_id: string): Promise<{ message: string }> {
-    let deletedProduct = await this.productsRepository.delete(product_id);
-
-    if (deletedProduct.affected === 0) {
+    const product = await this.productsRepository.findOneBy({id: product_id})
+    
+    if (!product) {
       throw new NotFoundException('Producto no encontrado');
     }
+    product.status = false
+    await this.productsRepository.save(product)
     return { message: 'Producto eliminado correctamente' };
   }
 
@@ -71,6 +106,13 @@ export class ProductsRepository {
     return this.productsRepository.findOne({
       where: { id: product_id },
       relations: ['store'],
+    });
+  }
+
+  async findProductsById(id: UUID[]): Promise<Product[]> {
+    return await this.productsRepository.find({
+      where: {id: In(id)},
+      relations: [ 'store' ]
     });
   }
 }

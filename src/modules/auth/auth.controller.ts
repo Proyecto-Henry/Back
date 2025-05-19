@@ -7,6 +7,10 @@ import { createAdmin } from './dtos/createAdmin.dto';
 import { payloadGoogle } from './dtos/signinGoogle.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Request } from 'express';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { Role } from 'src/enums/roles.enum';
+import { Roles } from 'src/decorators/role.decorator';
+import { RolesGuard } from 'src/guards/role.guard';
 
 class GoogleTokenDto {
   idToken: string;
@@ -26,14 +30,17 @@ export class AuthController {
     return this.authService.signUpAdmin(signUpAdmin);
   }
   
-  @Post('signUpUser')
-  @UseGuards(AuthGuard)
-  async signUp(@Body() signUpUser: SignUpAuthDto, @Req() req: Request & { user: any }) {
-    //el endpoint signInStore crea la tienda y el usuario
-  }
+  // @ApiBearerAuth()
+  // @Post('signUpUser')
+  // @UseGuards(AuthGuard)
+  // async signUp(@Body() signUpUser: SignUpAuthDto, @Req() req: Request & { user: any }) {
+  //   //el endpoint signInStore crea la tienda y el usuario
+  // }
   
+  @ApiBearerAuth()
   @Post('signUpStore')
-  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
   signInStore(@Body() userAndStore: SignUpAuthDto, @Req() req: Request & { user: any } ) {
     return this.authService.buildStore(userAndStore, req);
   }
@@ -41,8 +48,6 @@ export class AuthController {
   @Post('signinGoogle')
   signinGoogle(@Body() payload: payloadGoogle ) {
     try {
-      console.log(payload);
-      
       return this.authService.signinGoogle(payload)
     } catch (error) {
       throw new InternalServerErrorException('Ocurrió un error inesperado. No se pudo autenticar');
