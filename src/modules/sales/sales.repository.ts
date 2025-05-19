@@ -67,23 +67,40 @@ export class SalesRepository {
 
   async getSaleById(sale_id: string): Promise<Sale | null> {
     return await this.salesRepository.findOne({
-      where: { id: sale_id },
+      where: { id: sale_id, is_active:true },
       relations: ['sale_details', "sale_details.product", 'store'], 
     });
   }
 
   async getAllSales(): Promise<Sale[]> {
     return await this.salesRepository.find({
+      where: { is_active: true},
       relations: ['sale_details', "sale_details.product", 'store'], 
       order: { date: 'DESC' },
     });
   }
 
 
-  async deleteSale(sale_id: string): Promise<number> {
-    const result = await this.salesRepository.delete(sale_id);
-    return result.affected ?? 0;
+  async disableSale(sale_id: string){
+    const sale = await this.salesRepository.findOne({ where: { id: sale_id } });
+    if (!sale) throw new NotFoundException('Producto no encontrado');
+  
+    sale.is_active = false;
+    return await this.salesRepository.save(sale);
   }
 
+  async enableSale(sale_id: string) {
+    const sale = await this.salesRepository.findOne({ where: { id: sale_id } });
+    if (!sale) throw new NotFoundException('Producto no encontrado');
+  
+    sale.is_active = true;
+    return await this.salesRepository.save(sale);
+  }
+
+  
+  // async deleteSale(sale_id: string): Promise<number> {
+  //   const result = await this.salesRepository.delete(sale_id);
+  //   return result.affected ?? 0;
+  // }
 
 }

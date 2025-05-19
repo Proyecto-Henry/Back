@@ -20,10 +20,15 @@ export class Sale {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
   total: number;
 
-  @OneToMany(() => Sale_Detail, (sale_detail) => sale_detail.sale, {cascade: true})
+  @OneToMany(() => Sale_Detail, (sale_detail) => sale_detail.sale, {
+    cascade: true,
+  })
   sale_details: Sale_Detail[];
 
   @ManyToOne(() => Store, (store) => store.sales)
   @JoinColumn({ name: 'store_id' })
   store: Store;
+
+  @Column({ default: true })
+  is_active: boolean;
 }

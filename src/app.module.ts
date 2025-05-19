@@ -14,9 +14,12 @@ import { CountryModule } from './modules/country/country.module';
 import { CountriesSeed } from './seeds/countries/countries.seed';
 import { Country } from './entities/Country.entity';
 import { FileModule } from './modules/files/files.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CronsModule } from './crons/crons.module';
 
 @Module({
   imports: [
+    CronsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [typeOrmConfig],

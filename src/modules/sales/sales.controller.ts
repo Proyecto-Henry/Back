@@ -6,6 +6,7 @@ import {
   HttpException,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
@@ -37,27 +38,25 @@ export class SalesController {
     }
   }
 
-  
-
   @Post()
   registerSale(@Body() saleData: RegisterSaleDto) {
     return this.salesService.registerSale(saleData);
   }
 
-  @Delete('/store/:store_id')
-  DeleteSalesByStoreId(@Param(':store_id') store_id: string) {
-    try {
-      const sales = this.salesService.DeleteSalesByServicesId(store_id);
-      return sales;
-    } catch (error) {
-      if (Error instanceof HttpException) {
-        throw error;
-      }
-    }
+  
+  @Patch(':sale_id/disable')
+  disableSale(@Param('sale_id') sale_id: string) {
+    return this.salesService.disableSale(sale_id);
   }
 
-  @Delete(':sale_id')
-  deleteSale(@Param('sale_id', ParseUUIDPipe) sale_id: string) {
-    return this.salesService.deleteSale(sale_id);
+  @Patch(':sale_id/enable')
+  enableSale(@Param('sale_id') sale_id: string) {
+    return this.salesService.enableSale(sale_id);
   }
+
+  
+  // @Delete(':sale_id')
+  // deleteSale(@Param('sale_id', ParseUUIDPipe) sale_id: string) {
+  //   return this.salesService.deleteSale(sale_id);
+  // }
 }
