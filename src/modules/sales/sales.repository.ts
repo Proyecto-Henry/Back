@@ -160,69 +160,45 @@ export class SalesRepository {
   return sales;
 }
 
+async disableSale(sale_id: string) {
+  const queryRunner = this.salesRepository.manager.connection.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
 
-  async disableSale(sale_id: string){
-    const sale = await this.salesRepository.findOne({ where: { id: sale_id } });
-    if (!sale) throw new NotFoundException('Producto no encontrado');
-  
+  try {
+    const sale = await queryRunner.manager.findOne(Sale, {
+      where: { id: sale_id },
+      relations: { sale_details: { product: true } },
+    });
+
+    if (!sale) {
+      throw new NotFoundException('Venta no encontrada');
+    }
+
+
+    if(!sale.is_active){
+      throw new NotFoundException("Venta ya desactivada")
+    }
+    for (const detail of sale.sale_details) {
+      const product = detail.product;
+      if (!product) {
+        throw new Error(`Producto no encontrado`);
+      }
+      product.stock += detail.quantity;
+      await queryRunner.manager.save(Product, product);
+    }
+
     sale.is_active = false;
-    return await this.salesRepository.save(sale);
-  }
+    await queryRunner.manager.save(Sale, sale); // Guarda dentro de la transacción
 
-  async enableSale(sale_id: string) {
-    const sale = await this.salesRepository.findOne({ where: { id: sale_id } });
-    if (!sale) throw new NotFoundException('Producto no encontrado');
-  
-    sale.is_active = true;
-    return await this.salesRepository.save(sale);
-  }
-
-  async deleteSale(sale_id: string) {
-    const queryRunner = this.salesRepository.manager.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // Obtener la venta con sus detalles y productos asociados
-      const sale = await queryRunner.manager.findOne(Sale, {
-        where: { id: sale_id },
-        relations: { sale_details: { product: true } },
-      });
-
-      if (!sale) {
-        throw new NotFoundException('Venta no encontrada');
-      }
-
-      // Restaurar el stock de los productos
-      for (const detail of sale.sale_details) {
-        const product = detail.product;
-        if (!product) {
-          throw new Error(`Producto no encontrado`);
-        }
-        // Incrementar el stock del producto según la cantidad vendida
-        product.stock = (product.stock) + detail.quantity;
-        // Guardar el producto actualizado
-        await queryRunner.manager.save(Product, product);
-        // Eliminar la venta con sus Sale_Detail
-        const result = await queryRunner.manager.delete(Sale, { id: sale_id });
-        // Confirmar la transacción
-        await queryRunner.commitTransaction();
-        return result.affected ?? 0;
-      }
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release()
-    }
-    
-  }
-
-  async DeleteSalesByStoreId(store_id: string) {
-    await this.salesRepository.delete({ store: { id: store_id } });
-    return {
-      success: true,
-      message: "Ventas eliminadas exitosamente"
-    }
+    await queryRunner.commitTransaction();
+    return { message: 'Venta desactivada y stock restaurado' };
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    throw error;
+  } finally {
+    await queryRunner.release();
   }
 }
+}
+
