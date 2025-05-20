@@ -34,7 +34,7 @@ export class UsersRepository {
     return user ? user : 'Usuario no encontrado';
   }
 
-  async deleteUserByAdminId(store_id: string) {
+  async deleteUserByStoreId(store_id: string) {
     const user = await this.usersRepository.findOne({
       where: { store: { id: store_id } }
     })
