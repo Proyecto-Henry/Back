@@ -279,7 +279,7 @@ import { Repository } from 'typeorm';
           await queryRunner.manager.save(subscription);
           console.log('✅ Suscripción actualizada en base de datos:', subscription.id);
         }
-    
+        return subscription
         await queryRunner.commitTransaction();
         console.log('✅ Transacción completada exitosamente.');
       } catch (error) {

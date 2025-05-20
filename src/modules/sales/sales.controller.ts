@@ -57,4 +57,13 @@ export class SalesController {
     return this.salesService.disableSale(sale_id);
   }
 
+  @Patch('/store/:store_id')
+  deleteSalesByStoreId(@Param('store_id') store_id: string) {
+    try {
+      return this.salesService.deleteSalesByStoreId(store_id);
+    } catch (error) {
+        throw new HttpException('No se pudieron eliminar las ventas', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 }

@@ -9,6 +9,7 @@ import { Product } from 'src/entities/Product.entity';
 
 @Injectable()
 export class SalesRepository {
+  
   constructor(
     @InjectRepository(Sale) private salesRepository: Repository<Sale>,
     @InjectRepository(Sale_Detail)
@@ -22,6 +23,7 @@ export class SalesRepository {
         store: {
           id: store_id,
         },
+        is_active: true
       },
       relations: {
         sale_details: {
@@ -115,7 +117,7 @@ export class SalesRepository {
 
   async getSaleById(sale_id: string) {
     const result = await this.salesRepository.findOne({
-      where: { id: sale_id },
+      where: { id: sale_id, is_active: true },
       relations: ['sale_details', "sale_details.product"], 
     });
 
@@ -167,7 +169,7 @@ async disableSale(sale_id: string) {
 
   try {
     const sale = await queryRunner.manager.findOne(Sale, {
-      where: { id: sale_id },
+      where: { id: sale_id, is_active: true },
       relations: { sale_details: { product: true } },
     });
 
@@ -192,7 +194,36 @@ async disableSale(sale_id: string) {
     await queryRunner.manager.save(Sale, sale); // Guarda dentro de la transacción
 
     await queryRunner.commitTransaction();
-    return { message: 'Venta desactivada y stock restaurado' };
+    return { message: 'Venta eliminada y stock restaurado' };
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    throw error;
+  } finally {
+    await queryRunner.release();
+  }
+}
+
+async deleteSalesByStoreId(store_id: string) {
+  const queryRunner = this.salesRepository.manager.connection.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    const sales = await queryRunner.manager.find(Sale, {
+    where: { store: { id: store_id }, is_active: true }
+  });
+
+  if (!sales) {
+      throw new NotFoundException('Ventas no encontradas');
+  }
+
+  for (const sale of sales) {
+    sale.is_active = false;
+    await queryRunner.manager.save(Sale, sale);
+  }
+
+  await queryRunner.commitTransaction();
+  return { message: 'Historial de ventas eliminado exitosamente' };
   } catch (error) {
     await queryRunner.rollbackTransaction();
     throw error;

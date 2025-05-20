@@ -84,7 +84,7 @@ export class AdminsRepository {
     if (!result) {
       throw new NotFoundException('Admin no encontrado');
     }
-
+    result.stores = result.stores?.filter(store => store.status === true);
     const admin = {
       id: result.id,
       name: result.name,

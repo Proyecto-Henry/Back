@@ -4,8 +4,7 @@ import { RegisterSaleDto } from './dtos/registerDate.dto';
 
 @Injectable()
 export class SalesService {
- 
-
+  
   constructor(private readonly salesRepository: SalesRepository) {}
   async getSaleById(sale_id: string) {
     const sale = await this.salesRepository.getSaleById(sale_id);
@@ -30,4 +29,7 @@ export class SalesService {
     return this.salesRepository.disableSale(sale_id)
   }
 
+  deleteSalesByStoreId(store_id: string) {
+    return this.salesRepository.deleteSalesByStoreId(store_id)
+  }
 }
