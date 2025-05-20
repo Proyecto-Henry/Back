@@ -41,8 +41,8 @@ export class SubscriptionsController {
   @Post('createSubscription')
   createSubscription(@Body() data: createSubscriptionDto) {
     try {
-      this.subscriptionsService.createSubscription(data);
-      return { success: true, message: 'Suscripción creada exitosamente.' };
+      const result = this.subscriptionsService.createSubscription(data);
+      return { success: true, message: 'Suscripción creada exitosamente.', subscription: result };
     } catch (error) {
       throw new HttpException('No se pudo realizar el pago. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }

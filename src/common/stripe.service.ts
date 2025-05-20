@@ -113,8 +113,8 @@ import { Repository } from 'typeorm';
           
           await queryRunner.manager.save(subscription);
           await queryRunner.commitTransaction();
-      
           console.log('✅ Suscripción guardada en la base de datos:', subscription?.id);
+          return subscription
         } catch (error) {
           await queryRunner.rollbackTransaction();
       
