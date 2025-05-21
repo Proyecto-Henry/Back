@@ -4,14 +4,8 @@ import { RegisterSaleDto } from './dtos/registerDate.dto';
 
 @Injectable()
 export class SalesService {
+  
   constructor(private readonly salesRepository: SalesRepository) {}
-  async deleteSale(sale_id: string) {
-    const deleted = await this.salesRepository.deleteSale(sale_id);
-    if (!deleted) {
-      throw new NotFoundException('Venta no encontrada');
-    }
-    return { message: 'Venta eliminada correctamente' };
-  }
   async getSaleById(sale_id: string) {
     const sale = await this.salesRepository.getSaleById(sale_id);
     if (!sale) {
@@ -31,7 +25,11 @@ export class SalesService {
     return this.salesRepository.registerSale(saleData);
   }
 
-  DeleteSalesByStoreId(store_id: string) {
-    return this.salesRepository.DeleteSalesByStoreId(store_id);
+  disableSale(sale_id: string) {
+    return this.salesRepository.disableSale(sale_id)
+  }
+
+  deleteSalesByStoreId(store_id: string) {
+    return this.salesRepository.deleteSalesByStoreId(store_id)
   }
 }

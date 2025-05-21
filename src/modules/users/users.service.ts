@@ -63,7 +63,7 @@ export class UsersService {
   }
 
   deleteUserByStoreId(store_id: string) {
-    return this.usersRepo.deleteUserByAdminId(store_id)
+    return this.usersRepo.deleteUserByStoreId(store_id)
   }
 
   getUserWithAdmin(user_id: string) {

@@ -14,11 +14,13 @@ import { CountryModule } from './modules/country/country.module';
 import { CountriesSeed } from './seeds/countries/countries.seed';
 import { Country } from './entities/Country.entity';
 import { FileModule } from './modules/files/files.module';
+import { CronsModule } from './crons/crons.module';
 import { SuperAdminModule } from './modules/superAdmins/supers.module';
 import { SuperAdminSeeder } from './seeds/supers/superAdmin.seed';
 
 @Module({
   imports: [
+    CronsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [typeOrmConfig],

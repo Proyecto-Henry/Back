@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -51,21 +52,18 @@ export class SalesController {
     }
   }
 
-  @Delete('/store/:store_id')
-  DeleteSalesByStoreId(@Param('store_id') store_id: string) {
+  @Patch(':sale_id/disable')
+  disableSale(@Param('sale_id') sale_id: string) {
+    return this.salesService.disableSale(sale_id);
+  }
+
+  @Patch('/store/:store_id')
+  deleteSalesByStoreId(@Param('store_id') store_id: string) {
     try {
-      return this.salesService.DeleteSalesByStoreId(store_id);
+      return this.salesService.deleteSalesByStoreId(store_id);
     } catch (error) {
         throw new HttpException('No se pudieron eliminar las ventas', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  @Delete(':sale_id')
-  deleteSale(@Param('sale_id', ParseUUIDPipe) sale_id: string) {
-    try {
-      return this.salesService.deleteSale(sale_id);
-    } catch (error) {
-      throw new HttpException('No se pudo eliminar la venta', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
 }

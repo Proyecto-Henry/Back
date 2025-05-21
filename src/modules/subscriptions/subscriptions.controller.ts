@@ -41,8 +41,8 @@ export class SubscriptionsController {
   @Post('createSubscription')
   createSubscription(@Body() data: createSubscriptionDto) {
     try {
-      this.subscriptionsService.createSubscription(data);
-      return { success: true, message: 'Suscripción creada exitosamente.' };
+      const result = this.subscriptionsService.createSubscription(data);
+      return { success: true, message: 'Suscripción creada exitosamente.', subscription: result };
     } catch (error) {
       throw new HttpException('No se pudo realizar el pago. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -52,7 +52,7 @@ export class SubscriptionsController {
   canceledSubscription(@Param('subscription_id') subscription_id: string) {
     try {
       this.subscriptionsService.canceledSubscription(subscription_id);
-      return { success: true, message: 'Suscripción cancelada correctamente.' };
+      return { status: "cancelled", message: 'Suscripción cancelada correctamente.' };
     } catch (error) {
       throw new HttpException('Error al cancelar la subscripción. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -62,7 +62,7 @@ export class SubscriptionsController {
   reactivateSubscription(@Param('subscription_id') subscription_id: string){
     try {
       this.subscriptionsService.reactivateSubscription(subscription_id)
-      return { success: true, message: 'Suscripción reactivada correctamente.' };
+      return { status: "active", message: 'Suscripción reactivada correctamente.' };
     } catch (error) {
       throw new HttpException('Error al reactivar la subscripción. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -71,8 +71,8 @@ export class SubscriptionsController {
   @Post('changePlan')
   changePlan(@Body() data: changePlanDto){
     try {
-      this.subscriptionsService.changePlan(data)
-      return { success: true, message: 'Cambio de plan exitoso.' };
+      const result = this.subscriptionsService.changePlan(data)
+      return { success: true, message: 'Cambio de plan exitoso.', subscription: result };
     } catch (error) {
       throw new HttpException('Error al actualizar el plan. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }
