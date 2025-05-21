@@ -178,6 +178,13 @@ export class AuthService {
     };
     const token = this.jwtService.sign(payload);
 
+    const userData = {
+        name: user.name ,
+        id: user.id,
+        email: user.email,
+        role: role,
+    };
+    
     // Verificar si la suscripción está vencida
     if (role === Role.ADMIN) {
       const subscription = await this.subscriptionRepository.findOne({
@@ -196,8 +203,21 @@ export class AuthService {
         await this.subscriptionRepository.save(subscription);
       }
     }
-    const { password, ...userWithoutPassword } = user
-    return { user:userWithoutPassword, role, token }
+    // const { password, ...userWithoutPassword } = user
+    let userMessage
+    if (role === Role.USER) {
+      userMessage = "✅Login exitoso! Bienvenido"
+      return {
+        message: userMessage,
+        token: token,
+        user: userData,
+    };
+    }
+    return {
+        message: `✅Login exitoso! Bienvenido/a ${user.name}`,
+        token: token,
+        user: userData,
+    };
   }
 
   //TODO ADMINISTRADOR
@@ -414,8 +434,25 @@ export class AuthService {
       subscription.admin = result;
       await this.subscriptionRepository.save(subscription);
       await this.mailService.sendNotificationMail(admin.email);
+
+      const payload = {
+        id: admin.id,
+        email: admin.email,
+        status: admin.status,
+        role: Role.ADMIN,
+      };
+      const token = this.jwtService.sign(payload);
+
+      const user = {
+        name: admin.name,
+        id: admin.id,
+        email: admin.email,
+        role: Role.ADMIN,
+      };
       return {
-        message: 'Usuario registrado con éxito, chequee su casilla de correo',
+        message: `✅Login exitoso! Bienvenido/a ${(admin as Admin).name}`,
+        token: token,
+        user: user,
       };
     } else if (googleId === admin.google_id) {
       const payload = {
@@ -433,7 +470,7 @@ export class AuthService {
         role: Role.ADMIN,
       };
       return {
-        message: `✅Login exitoso! Bienvenido ${(admin as Admin).name}`,
+        message: `✅Login exitoso! Bienvenido/a ${(admin as Admin).name}`,
         token: token,
         user: user,
       };
