@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Subscription } from 'src/entities/Subscription.entity';
 import { Plan } from 'src/enums/plan.enum';
@@ -16,7 +16,7 @@ import { Repository } from 'typeorm';
 
       constructor(
       @InjectRepository(Subscription) private subscriptionsRepository: Repository<Subscription>,
-      private readonly adminsService: AdminsService
+      @Inject(forwardRef(() => AdminsService)) private readonly adminsService: AdminsService
       ) {
           const stripeKey = process.env.STRIPE_SECRET_KEY;
 

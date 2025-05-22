@@ -153,7 +153,6 @@ export class AuthService {
         break;
       }
     }
-
     if (!user || !role)
       throw new UnauthorizedException('❌Credenciales inválidas');
 
@@ -183,6 +182,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         role: role,
+        img_profile: (user as Admin).img_profile
     };
     
     // Verificar si la suscripción está vencida
@@ -439,7 +439,7 @@ export class AuthService {
         id: admin.id,
         email: admin.email,
         status: admin.status,
-        role: Role.ADMIN,
+        role: Role.ADMIN
       };
       const token = this.jwtService.sign(payload);
 
@@ -448,6 +448,7 @@ export class AuthService {
         id: admin.id,
         email: admin.email,
         role: Role.ADMIN,
+        img_profile: admin.img_profile
       };
       return {
         message: `✅Login exitoso! Bienvenido/a ${(admin as Admin).name}`,
@@ -468,6 +469,7 @@ export class AuthService {
         id: admin.id,
         email: admin.email,
         role: Role.ADMIN,
+        img_profile: admin.img_profile
       };
       return {
         message: `✅Login exitoso! Bienvenido/a ${(admin as Admin).name}`,

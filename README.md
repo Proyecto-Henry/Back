@@ -97,9 +97,9 @@ Cloudinary, Stripe y Nodemailer
 
    Podés utilizar PostgreSQL y crear una base de datos llamada `sistema_gestion`. Luego, TypeORM sincronizará las entidades automáticamente.
 
-### 5. Rellenando las Variables de Entorno
+5. **Rellenando las Variables de Entorno**
 
-#### **Cloudinary**
+**Cloudinary**
 Las credenciales de Cloudinary se obtienen desde su página oficial una vez que creas una cuenta y configuras un entorno. Los datos necesarios son:
 
 - **CLOUDINARY_CLOUD_NAME:** Nombre de tu cuenta (remarcado en verde en la imagen).
