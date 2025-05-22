@@ -114,7 +114,11 @@ import { Repository } from 'typeorm';
           await queryRunner.manager.save(subscription);
           await queryRunner.commitTransaction();
           console.log('✅ Suscripción guardada en la base de datos:', subscription?.id);
-          return subscription
+          if (!subscription) {
+            throw new Error('No se pudo crear la suscripción.');
+          }
+          const { admin: _admin, ...subscriptionWithoutAdmin } = subscription;
+          return subscriptionWithoutAdmin
         } catch (error) {
           await queryRunner.rollbackTransaction();
       
@@ -279,9 +283,13 @@ import { Repository } from 'typeorm';
           await queryRunner.manager.save(subscription);
           console.log('✅ Suscripción actualizada en base de datos:', subscription.id);
         }
-        return subscription
         await queryRunner.commitTransaction();
         console.log('✅ Transacción completada exitosamente.');
+        if (!subscription) {
+            throw new Error('No se pudo crear la suscripción.');
+          }
+          const { admin, ...subscriptionWithoutAdmin } = subscription;
+          return subscriptionWithoutAdmin
       } catch (error) {
         console.error('❌ Error en el proceso de cambio de plan:', error)
         await queryRunner.rollbackTransaction();

@@ -39,9 +39,9 @@ export class SubscriptionsController {
   }
 
   @Post('createSubscription')
-  createSubscription(@Body() data: createSubscriptionDto) {
+  async createSubscription(@Body() data: createSubscriptionDto) {
     try {
-      const result = this.subscriptionsService.createSubscription(data);
+      const result = await this.subscriptionsService.createSubscription(data);
       return { success: true, message: 'Suscripción creada exitosamente.', subscription: result };
     } catch (error) {
       throw new HttpException('No se pudo realizar el pago. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -69,9 +69,9 @@ export class SubscriptionsController {
   }
 
   @Post('changePlan')
-  changePlan(@Body() data: changePlanDto){
+  async changePlan(@Body() data: changePlanDto){
     try {
-      const result = this.subscriptionsService.changePlan(data)
+      const result = await this.subscriptionsService.changePlan(data)
       return { success: true, message: 'Cambio de plan exitoso.', subscription: result };
     } catch (error) {
       throw new HttpException('Error al actualizar el plan. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
