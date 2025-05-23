@@ -93,8 +93,10 @@ export class AuthService {
     if (!validPassword)
       throw new UnauthorizedException('❌Credenciales inválidas');
 
-    if((user as Admin | User).status === Status_User.INACTIVE){
+    if (user instanceof Admin && user.status === Status_User.INACTIVE) {
       throw new UnauthorizedException('❌Su cuenta ha sido suspendida por violar los Términos de Uso.');
+    } else if (user instanceof User && user.status === Status_User.INACTIVE) {
+      throw new UnauthorizedException('❌Su cuenta ha sido suspendida.');
     }
     
     const payload = {
@@ -263,6 +265,12 @@ export class AuthService {
         );
       }
     }
+
+    if(subscription.status === 'cancelled') {
+      throw new BadRequestException(
+          "Cancelaste la suscripción, no podés agregar una tienda",
+      );
+    }
     const existAddress = await this.storesService.findAddress(
       userStore.address,
     );
@@ -348,6 +356,10 @@ export class AuthService {
         user: user,
       };
     } else if (googleId === admin.google_id) {
+
+      if (admin.status === Status_User.INACTIVE) {
+      throw new UnauthorizedException('❌Su cuenta ha sido suspendida por violar los Términos de Uso.');
+      }
       const payload = {
         id: admin.id,
         email: admin.email,
