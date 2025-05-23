@@ -42,25 +42,7 @@ export class SubscriptionsRepository {
     if (!subscription) {
        throw new NotFoundException('No se encontró la suscripción');
     }
-
-    const {
-      admin: {
-        password,
-        google_id,
-        phone,
-        img_profile,
-        status,
-        created_at,
-        ...cleanAdmin
-      },
-      ...restOfSubscription
-    } = subscription;
-
-    const cleanedSubscription = {
-      ...restOfSubscription,
-      admin: cleanAdmin
-    };
-    return cleanedSubscription
+    return subscription
   }
 
   createSubscription(data: createSubscriptionDto) {

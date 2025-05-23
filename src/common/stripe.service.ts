@@ -173,9 +173,13 @@ import { Repository } from 'typeorm';
           await queryRunner.manager.save(subscription);
           console.log('✅ Estado actualizado en la base de datos');
         }
-
         await queryRunner.commitTransaction();
         console.log('✅ Transacción completada correctamente');
+        if (!subscription) {
+            throw new Error('No se pudo crear la suscripción.');
+        }
+        const { admin: _admin, ...subscriptionWithoutAdmin } = subscription;
+        return subscriptionWithoutAdmin
       } catch (error) {
         console.error('❌ Error al cancelar suscripción:', error);
         // revertir el cambio en Stripe (eliminando la cancelación programada)
@@ -217,6 +221,8 @@ import { Repository } from 'typeorm';
       console.log(`💾 Estado actualizado a ACTIVE en la base de datos para la suscripción: ${subscription_id}`);
       await queryRunner.commitTransaction();
       console.log('✅ Suscripción reactivada con éxito.');
+      const { admin, ...subscriptionWithoutAdmin } = subscription;
+      return subscriptionWithoutAdmin
       }
       } catch (error) {
         await queryRunner.rollbackTransaction();

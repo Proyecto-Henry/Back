@@ -21,18 +21,23 @@ export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
   @Get('admin/:admin_id')
-  getSubscriptionByAdminId(@Param('admin_id') admin_id: string) {
+  async getSubscriptionByAdminId(@Param('admin_id') admin_id: string) {
     try {
-      return this.subscriptionsService.getSubscriptionByAdminId(admin_id);
+      const result = await this.subscriptionsService.getSubscriptionByAdminId(admin_id);
+      const {admin, ...subscription } = result
+      return { success: true, message: "Suscripción obtenida con éxito.", subscription: subscription
+      }
     } catch (error) {
       throw error
     }
   }
 
   @Get('user/:user_id')
-  getSubscriptionByUserId(@Param('user_id') user_id: string) {
+  async getSubscriptionByUserId(@Param('user_id') user_id: string) {
     try {
-      return this.subscriptionsService.getSubscriptionByUserId(user_id);
+      const result = await this.subscriptionsService.getSubscriptionByUserId(user_id);
+      return { success: true, message: "Suscripción obtenida con éxito.", subscription: result
+      }
     } catch (error) {
       throw error
     }
@@ -49,20 +54,20 @@ export class SubscriptionsController {
   }
 
   @Post('canceledSubscription/:subscription_id')
-  canceledSubscription(@Param('subscription_id') subscription_id: string) {
+  async canceledSubscription(@Param('subscription_id') subscription_id: string) {
     try {
-      this.subscriptionsService.canceledSubscription(subscription_id);
-      return { status: "cancelled", message: 'Suscripción cancelada correctamente.' };
+      const result = await this.subscriptionsService.canceledSubscription(subscription_id);
+      return { success: true, message: 'Suscripción cancelada correctamente.', subscription: result };
     } catch (error) {
       throw new HttpException('Error al cancelar la subscripción. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @Post('reactivateSubscription/:subscription_id')
-  reactivateSubscription(@Param('subscription_id') subscription_id: string){
+  async reactivateSubscription(@Param('subscription_id') subscription_id: string){
     try {
-      this.subscriptionsService.reactivateSubscription(subscription_id)
-      return { status: "active", message: 'Suscripción reactivada correctamente.' };
+      const result = await this.subscriptionsService.reactivateSubscription(subscription_id)
+      return { success: true, message: 'Suscripción reactivada correctamente.', subscription: result };
     } catch (error) {
       throw new HttpException('Error al reactivar la subscripción. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }
