@@ -24,7 +24,6 @@ export class StoresRepository {
     if (!storeAndProducts) {
       throw new NotFoundException('Tienda no encontrada');
     }
-    // Filtrar productos con status: true
     storeAndProducts.products = storeAndProducts.products.filter((product) => product.status === true);
     return storeAndProducts
   }
@@ -77,7 +76,6 @@ export class StoresRepository {
     if (!storeAndProducts) {
       throw new NotFoundException('Tienda no encontrada');
     }
-    // Filtrar productos con status: true
     storeAndProducts.products = storeAndProducts.products.filter((product) => product.status === true);
     return storeAndProducts
   }

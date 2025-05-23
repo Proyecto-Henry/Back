@@ -2,12 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsOptional,
   IsString,
   Matches,
   MaxLength,
   MinLength,
-  Validate,
 } from 'class-validator';
 
 export class SignUpAuthDto {
@@ -40,25 +38,9 @@ export class SignUpAuthDto {
   @IsString()
   password: string;
 
-  // @IsNotEmpty()
-  // @IsString()
-  // passwordConfirm: string;
-
   @ApiProperty({ example: 'Av Salta 763' })
   @IsNotEmpty()
   @IsString()
   address: string;
 
-  // @MaxLength(30, {
-  //   message: 'El numero de celular no debe tener más de 30 caracteres.',
-  // })
-  // @Matches(/^\d{6,30}$/, {
-  //   message: 'El número de teléfono debe ser válido',
-  // })
-  // @IsOptional()
-  // phone: string;
-
-  // @IsString()
-  // @IsOptional()
-  // countryCode: string;
 }

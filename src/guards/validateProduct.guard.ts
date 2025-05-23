@@ -4,7 +4,6 @@ import {
   ExecutionContext,
   Injectable,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import { ProductsService } from 'src/modules/products/product.service';
 
 @Injectable()
@@ -20,18 +19,11 @@ export class ValidateProduct implements CanActivate {
       );
     }
 
-    // obtengo un array de cada producto a comprar
     const productsId = sale_details.map((element) => element.product_id);
 
-    // verifio que esten disponible
     const existingProducts =
-      await this.productService.findProductsById(productsId);
-    // if (existingProducts.length !== productsId.length)
-    //   throw new BadRequestException(
-    //     'Intenta adquirir producto/s inexistente/s',
-    //   );
-
-    // por cada pruducto en sale_details
+    await this.productService.findProductsById(productsId);
+    
     for (const detail of sale_details) {
       const { product_id, quantity } = detail;
 

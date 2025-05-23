@@ -11,12 +11,10 @@ import { CreateStoreDto } from '../stores/dtos/CreateStore.Dto';
 import { Store } from 'src/entities/Store.entity';
 import { DataSource } from 'typeorm';
 import { CreateStoreResponseDto } from '../stores/dtos/CreateStoreResponse.dto';
-import { payloadGoogle } from '../auth/dtos/signinGoogle.dto';
 import { Subscription } from 'src/entities/Subscription.entity';
 import { User } from 'src/entities/User.entity';
 import { Product } from 'src/entities/Product.entity';
 import { Sale } from 'src/entities/Sale.entity';
-import { Sale_Detail } from 'src/entities/Sale_Detail.entity';
 import { UsersService } from '../users/users.service';
 import { StripeService } from 'src/common/stripe.service';
 
@@ -25,9 +23,7 @@ export class AdminsRepository {
   
   constructor(
     @InjectRepository(Admin) private adminsRepository: Repository<Admin>,
-    @InjectRepository(Country) private countrysRepository: Repository<Country>,
     private dataSource: DataSource,
-    private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly stripeService: StripeService
   ) {}
@@ -50,7 +46,6 @@ export class AdminsRepository {
     if (!admin) {
       return 'Administrador no encontrado';
     }
-    // Filtrar stores con status: true
     admin.stores = admin.stores.filter((store) => store.status === true);
     return admin.stores.length ? admin.stores : 'No tiene tiendas asociadas';
   }
@@ -226,23 +221,16 @@ export class AdminsRepository {
     await queryRunner.startTransaction();
 
     try {
-      // Eliminar las suscripciones asociadas al admin
       await queryRunner.manager.delete(Subscription, { admin: { id: admin_id } });
-
-      // Eliminar las tiendas asociadas al admin
       const stores = await queryRunner.manager.find(Store, { where: { admin: { id: admin_id } } });
       for (const store of stores) {
         await queryRunner.manager.delete(Sale, { store: store.id });
         await queryRunner.manager.delete(Product, { store: store.id });
       }
       await queryRunner.manager.delete(Store, { admin: { id: admin_id } });
-      //eliminar el user
       await queryRunner.manager.delete(User, { admin: { id: admin_id } });
-      //eliminar el admin
       await queryRunner.manager.delete(Admin, { id: admin_id });
-
       await queryRunner.commitTransaction();
-
       return {
       success: true,
       message: "Cuenta eliminada con éxito"

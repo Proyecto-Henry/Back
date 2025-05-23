@@ -41,38 +41,30 @@ import { Repository } from 'typeorm';
         let stripeSubscription: Stripe.Subscription | undefined;
       
         try {
-          // 1. Crear cliente
           console.log('🔄 Creando cliente en Stripe...');
           customer = await this.stripe.customers.create({
             email: data.customer.email,
             name: data.customer.name,
           });
           console.log('✅ Cliente creado en Stripe:', customer.id);
-      
-          // 2. Crear producto y plan
           console.log('🔄 Creando producto en Stripe...');
           product = await this.stripe.products.create({
             name: data.plan.name,
           });
           console.log('✅ Producto creado en Stripe:', product.id);
-      
           console.log('🔄 Creando plan en Stripe...');
           plan = await this.stripe.plans.create({
-            amount: data.plan.amount * 100, // Stripe usa centavos
+            amount: data.plan.amount * 100,
             currency: 'usd',
             interval: data.plan.interval,
             product: product.id,
           });
           console.log('✅ Plan creado en Stripe:', plan.id);
-      
-          // 3. Adjuntar método de pago al cliente
           console.log('🔄 Adjuntando método de pago al cliente...');
           await this.stripe.paymentMethods.attach(data.subscription.paymentMethod, {
             customer: customer.id,
           });
           console.log('✅ Método de pago adjuntado');
-      
-          // 4. Establecer método de pago como predeterminado
           console.log('🔄 Estableciendo método de pago predeterminado...');
           await this.stripe.customers.update(customer.id, {
             invoice_settings: {
@@ -80,8 +72,6 @@ import { Repository } from 'typeorm';
             },
           });
           console.log('✅ Método de pago predeterminado asignado');
-      
-          // 5. Crear suscripción
           console.log('🔄 Creando suscripción en Stripe...');
           stripeSubscription = await this.stripe.subscriptions.create({
             customer: customer.id,
@@ -89,8 +79,6 @@ import { Repository } from 'typeorm';
             expand: ['latest_invoice']
           });
           console.log('✅ Suscripción creada en Stripe:', stripeSubscription.id);
-      
-          // 6. Guardar suscripción en la base de datos
           console.log('🔄 Buscando admin con email:', data.customer.email);
           const admin = await this.adminsService.getAdminByEmail(data.customer.email);
           if (!admin) throw new Error('Admin no encontrado');
@@ -99,7 +87,6 @@ import { Repository } from 'typeorm';
             where: { admin: { id: admin.id } },
             relations: ['admin']
           });
-
           if(subscription) {
             subscription.plan = data.subscription.plan
             subscription.start_date = new Date()
@@ -110,7 +97,6 @@ import { Repository } from 'typeorm';
             subscription.stripe_customer_id = customer.id;
             subscription.stripe_plan_id = plan.id;
           }
-          
           await queryRunner.manager.save(subscription);
           await queryRunner.commitTransaction();
           console.log('✅ Suscripción guardada en la base de datos:', subscription?.id);
@@ -121,8 +107,6 @@ import { Repository } from 'typeorm';
           return subscriptionWithoutAdmin
         } catch (error) {
           await queryRunner.rollbackTransaction();
-      
-          // Limpieza si algo falló
           if (stripeSubscription) {
             await this.stripe.subscriptions.cancel(stripeSubscription.id).catch(() => null);
             console.log('🔄 Suscripción cancelada en Stripe:', stripeSubscription.id);
@@ -147,8 +131,6 @@ import { Repository } from 'typeorm';
         }
       }
       
-      
-
     async canceledSubscription(subscription_id: string) {
       const queryRunner = this.subscriptionsRepository.manager.connection.createQueryRunner();
       await queryRunner.connect();
@@ -174,7 +156,6 @@ import { Repository } from 'typeorm';
           console.log('✅ Estado actualizado en la base de datos');
         }
         await queryRunner.commitTransaction();
-        console.log('✅ Transacción completada correctamente');
         if (!subscription) {
             throw new Error('No se pudo crear la suscripción.');
         }
@@ -189,11 +170,9 @@ import { Repository } from 'typeorm';
         });
         console.log('✅ Cancelación revertida');
         await queryRunner.rollbackTransaction();
-        console.log('🔄 Transacción revertida');
         throw new Error('No se pudo cancelar la suscripción correctamente');
       } finally {
         await queryRunner.release();
-        console.log('🔄 QueryRunner liberado');
       }
     }
 
@@ -204,18 +183,15 @@ import { Repository } from 'typeorm';
 
       try {
         console.log(`🔄 Reactivando suscripción con ID: ${subscription_id}...`);
-        // 1. Quitar cancelación programada en Stripe
         const updatedSubscription = await this.stripe.subscriptions.update(subscription_id, {
         cancel_at_period_end: false,
       });
       console.log(`✅ Cancelación eliminada en Stripe: ${updatedSubscription.id}`);
-      // 2. Buscar suscripción en la base de datos
       const subscription = await queryRunner.manager.findOneBy(Subscription, {
       external_subscription_id: subscription_id,
       });
 
       if(subscription) {
-        // 3. Actualizar estado en la base de datos
       subscription.status = Status_Sub.ACTIVE;
       await queryRunner.manager.save(subscription);
       console.log(`💾 Estado actualizado a ACTIVE en la base de datos para la suscripción: ${subscription_id}`);
@@ -227,7 +203,6 @@ import { Repository } from 'typeorm';
       } catch (error) {
         await queryRunner.rollbackTransaction();
         console.error('❌ Error al reactivar la suscripción:', error.message);
-        // Revertir el cambio en Stripe si falló la base de datos
         try {
           await this.stripe.subscriptions.update(subscription_id, {
             cancel_at_period_end: true,
@@ -240,7 +215,6 @@ import { Repository } from 'typeorm';
       } finally {
         await queryRunner.release();
       }
-
     }
 
     async changePlan(data: changePlanDto) {
@@ -257,8 +231,7 @@ import { Repository } from 'typeorm';
         const subscriptionStripe = await this.stripe.subscriptions.retrieve(data.subscription_id);
         itemId = subscriptionStripe.items.data[0].id;
         oldPlanId = subscriptionStripe.items.data[0].plan.id;
-    
-        // 1. Crear nuevo producto y plan
+        
         console.log('🔨 Creando nuevo producto en Stripe con nombre:', data.planId);
         product = await this.stripe.products.create({ name: data.planId });
         console.log('✅ Producto creado en Stripe:', product.id);
@@ -270,18 +243,15 @@ import { Repository } from 'typeorm';
           product: product.id,
         });
         console.log('✅ Nuevo plan creado en Stripe:', newPlan.id);
-        // 2. Actualizar suscripción con nuevo plan
         console.log(`🔁 Actualizando suscripción ${data.subscription_id} con nuevo plan...`);
         await this.stripe.subscriptions.update(data.subscription_id, {
           items: [{ id: itemId, plan: newPlan.id }],
           proration_behavior: 'create_prorations',
         });
         console.log('✅ Suscripción actualizada correctamente en Stripe.');
-        // 3. Actualizar en la base de datos
         const subscription = await queryRunner.manager.findOneBy(Subscription, {
           external_subscription_id: data.subscription_id,
         });
-    
         if (subscription) {
           console.log('🔁 Actualizando suscripción en base de datos con nuevo plan:', data.planId);
           subscription.plan = data.planId;
@@ -290,7 +260,6 @@ import { Repository } from 'typeorm';
           console.log('✅ Suscripción actualizada en base de datos:', subscription.id);
         }
         await queryRunner.commitTransaction();
-        console.log('✅ Transacción completada exitosamente.');
         if (!subscription) {
             throw new Error('No se pudo crear la suscripción.');
           }
@@ -299,8 +268,6 @@ import { Repository } from 'typeorm';
       } catch (error) {
         console.error('❌ Error en el proceso de cambio de plan:', error)
         await queryRunner.rollbackTransaction();
-        console.log('↩️ Transacción revertida.');
-        // Revertir en Stripe
         if (itemId && oldPlanId) {
           console.log('🔄 Revirtiendo cambio de plan en Stripe...');
           await this.stripe.subscriptions.update(data.subscription_id, {
@@ -309,15 +276,12 @@ import { Repository } from 'typeorm';
           });
           console.log('✅ Plan revertido al original en Stripe.');
         }
-    
-        throw new Error('No se pudo cambiar el plan, se realizó rollback.');
+        throw new Error('No se pudo cambiar el plan.');
       } finally {
         await queryRunner.release();
-        console.log('🔚 QueryRunner liberado.');
       }
     }
     
-  
     private getAmountForPlan(planLabel: string): number {
       switch (planLabel) {
         case '1 store':
@@ -337,27 +301,20 @@ import { Repository } from 'typeorm';
       await queryRunner.startTransaction();
 
       try {
-        // Verificar la firma del webhook para asegurar que proviene de Stripe
         const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
         if (!webhookSecret) {
           throw new Error('STRIPE_WEBHOOK_SECRET no está definido en las variables de entorno');
         }
 
         const event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-        
-        // Manejar el evento invoice.payment_succeeded
         if (event.type === 'invoice.payment_succeeded') {
           const invoice = event.data.object as Stripe.Invoice;
-          // Obtener el customerId desde la factura
           const customerId = typeof invoice.customer === 'string' ? invoice.customer : null;
           if (!customerId) {
             console.log('No se encontró un customerId en la factura');
             return { received: true };
           }
-
           console.log('🔄 Procesando renovación de suscripción');
-
-          // Buscar la suscripción en la base de datos
           const subscription = await queryRunner.manager.findOne(Subscription, {
             where: { stripe_customer_id: customerId },
           });
@@ -367,12 +324,9 @@ import { Repository } from 'typeorm';
             return { received: true };
           }
           const subscription_id = subscription.external_subscription_id
-          
-          // Obtener los detalles de la suscripción desde Stripe
           const stripeSubscription = await this.stripe.subscriptions.retrieve(subscription_id);
           const currentPeriodEnd = stripeSubscription.ended_at ? new Date(stripeSubscription.ended_at * 1000) : null; // Convertir timestamp de Stripe a Date
           const currentPeriodStart = new Date(stripeSubscription.start_date * 1000);
-          // Actualizar fechas y estado en la base de datos
           subscription.start_date = currentPeriodStart
           if(currentPeriodEnd) subscription.end_date = currentPeriodEnd;
 
@@ -383,8 +337,6 @@ import { Repository } from 'typeorm';
           await queryRunner.commitTransaction();
           return { received: true };
         }
-
-        // Manejar otros eventos si es necesario
         else if (event.type === 'invoice.payment_failed') {
           const invoice = event.data.object as Stripe.Invoice;
           const customerId = typeof invoice.customer === 'string' ? invoice.customer : null;

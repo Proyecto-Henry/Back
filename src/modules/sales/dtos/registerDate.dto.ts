@@ -14,7 +14,7 @@ class SaleDetailDto {
 export class RegisterSaleDto {
   @ApiProperty({ example: '2025-05-15 10:38:28.104' })
   @IsOptional()
-  @IsDateString() //IsDateString para validar formato ISO
+  @IsDateString()
   date: string;
 
   @ArrayNotEmpty()

@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Admin } from 'src/entities/Admin.entity';
 import { Country } from 'src/entities/Country.entity';
@@ -8,7 +8,6 @@ import { AdminsController } from './admins.controller';
 import { StripeService } from 'src/common/stripe.service';
 import { Store } from 'src/entities/Store.entity';
 import { UserModule } from '../users/users.module';
-import { AuthModule } from '../auth/auth.module';
 import { Subscription } from 'src/entities/Subscription.entity';
 
 @Module({

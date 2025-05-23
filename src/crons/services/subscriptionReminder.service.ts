@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { LessThanOrEqual, Repository } from 'typeorm';
 import { Subscription } from 'src/entities/Subscription.entity'; 
 import { transporter } from '../../config/nodemailer.config'; 
 import * as dayjs from 'dayjs';

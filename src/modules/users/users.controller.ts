@@ -19,7 +19,6 @@ export class UsersController {
     }
   }
 
-  //? ENDPOINT: RETORNA UN USUARIO POR ID
   @Get(':id')
   getUser(@Param('id', new ParseUUIDPipe()) id: UUID): Promise<User|string> {
     try {
@@ -29,7 +28,6 @@ export class UsersController {
     }
   }
 
-  //? ENDPOINT: RETORNA TODOS LOS USUARIOS
   @Get()
   getAllusers(): Promise<User[]> {
     try {

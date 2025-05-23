@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { SubscriptionsRepository } from './subscriptions.repository';
-import { AdminsService } from '../admins/admins.service';
 import { changePlanDto } from './dtos/change-plan.dto';
 import { createSubscriptionDto } from './dtos/create-subscription.dto';
 
@@ -9,7 +8,6 @@ export class SubscriptionsService {
    
   constructor(
     private readonly subscriptionsRepository: SubscriptionsRepository,
-    // private readonly adminsService: AdminsService,
   ) {}
 
   addTrialSubscription() {
@@ -17,10 +15,7 @@ export class SubscriptionsService {
   }
 
   async getSubscriptionByAdminId(admin_id: string) {
-    // const foundAdmin = await this.adminsService.getAdminById(admin_id);
-
     return this.subscriptionsRepository.getSubscriptionByAdminId(admin_id)
-
   }
   createSubscription(data: createSubscriptionDto) {
     return this.subscriptionsRepository.createSubscription(data)

@@ -1,6 +1,5 @@
 import { BadRequestException, CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Observable } from "rxjs";
 import { Product } from "src/entities/Product.entity";
 import { Store } from "src/entities/Store.entity";
 import { Repository } from "typeorm";

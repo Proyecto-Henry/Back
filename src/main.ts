@@ -4,21 +4,20 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { loggerGlobal } from './middlewares/logger.middleware';
 import { CountriesSeed } from './seeds/countries/countries.seed';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
-import * as express from 'express'; // para usar express.raw
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(
     '/subscriptions/webhook',
-    express.raw({ type: 'application/json' }) // esto es para Stripe
+    express.raw({ type: 'application/json' })
   );
   app.enableCors({
-    origin: 'https://front-tau-gold.vercel.app', // Cambia esto por el origen de tu frontend
+    origin: 'https://front-tau-gold.vercel.app',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // Si usas cookies o auth headers
+    credentials: true,
   });
   app.use(loggerGlobal);
-  //!Controlador de errores personalizado
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -36,7 +35,6 @@ async function bootstrap() {
       },
     }),
   );
-  //!FIN DE CONTROLADOR DE ERRORES PERSONALIZADOS
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Sistema de Gestión y Ventas')
     .setDescription('Api construida con Nestjs')

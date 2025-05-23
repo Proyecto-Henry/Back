@@ -9,11 +9,11 @@ export class MailService {
       'https://res.cloudinary.com/dtwxythux/image/upload/v1746139566/37da6594c977bf38c2aa11511ce359249c7fc531_kbk3m9.png';
     try {
       const info = await transporter.sendMail({
-        from: '"Safe Stock" <safestock08@gmail.com>', // quien envian el correo
-        to: email, // quien lo recibe
-        subject: 'Cuenta creada con exito!', // asunto del mensaje
+        from: '"Safe Stock" <safestock08@gmail.com>',
+        to: email,
+        subject: 'Cuenta creada con exito!',
         text: `Bienvenido a SafeStock`,
-        html: welcomeMessage(email,img,pass), // cuerpo del mensaje 
+        html: welcomeMessage(email,img,pass),
       });
 
       console.log('📨 Mensaje enviado:', info.messageId);

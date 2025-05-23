@@ -1,5 +1,4 @@
 import { BadRequestException, CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
-import { Observable } from "rxjs";
 import { StoresService } from "src/modules/stores/stores.service";
 
 @Injectable()

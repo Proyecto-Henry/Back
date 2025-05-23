@@ -9,10 +9,6 @@ import { UUID } from 'crypto';
 export class ProductsService {
   constructor(private readonly productsRepository: ProductsRepository) {}
 
-  // getStockByStore(product_id: string[]) {
-  //   return this.productsRepository.getStockByStore(product_id);
-  // }
-
   async getProductsById(saleData: RegisterSaleDto) {
     return this.productsRepository.getProductsById(saleData);
   }

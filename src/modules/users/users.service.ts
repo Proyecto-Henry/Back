@@ -1,14 +1,11 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Store } from 'src/entities/Store.entity';
 import { User } from 'src/entities/User.entity';
 import { Status_User } from 'src/enums/status_user.enum';
 import { Repository } from 'typeorm';
-import { Admin } from 'src/entities/Admin.entity';
 import { UsersRepository } from './users.repository';
 import { UUID } from 'crypto';
 

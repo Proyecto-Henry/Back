@@ -14,14 +14,14 @@ export const config = {
   synchronize: true,
   logging: false,
   ssl: {
-    rejectUnauthorized: false, // Importante para Render u otros entornos con SSL auto-firmado
+    rejectUnauthorized: false,
   },
   extra: {
     ssl: true,
   },
   entities: ['dist/**/*.entity{.js,.ts}'],
   migrations: ['dist/migrations/*{.js,.ts}'],
-  dropSchema: true,
+  dropSchema: false,
 };
 
 export default registerAs('typeorm', () => config);

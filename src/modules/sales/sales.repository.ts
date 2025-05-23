@@ -58,7 +58,6 @@ export class SalesRepository {
     const sale_details = saleData.sale_details
     const products = await this.productsService.getProductsById(saleData)
 
-    //calculamos el total
     let total = 0
     
     for (const item of sale_details) {
@@ -67,7 +66,6 @@ export class SalesRepository {
         total += product.price * item.quantity;
       }
     }
-    //realizamos la venta
     const sale = await this.salesRepository.save({
       date:saleData.date,
       total: total,
@@ -99,7 +97,6 @@ export class SalesRepository {
       })),
     };
 
-    // actualizamos el stock de los productos vendidos
     for (const item of sale_details) {
       const product = products.find(p => p.id === item.product_id);
       if (product) {
@@ -191,7 +188,7 @@ async disableSale(sale_id: string) {
     }
 
     sale.is_active = false;
-    await queryRunner.manager.save(Sale, sale); // Guarda dentro de la transacción
+    await queryRunner.manager.save(Sale, sale);
 
     await queryRunner.commitTransaction();
     return { message: 'Venta eliminada y stock restaurado' };

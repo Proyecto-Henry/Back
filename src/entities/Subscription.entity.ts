@@ -26,19 +26,15 @@ export class Subscription {
   @Column({ type: 'enum', enum: Status_Sub })
   status: Status_Sub;
 
-  // ID de suscripción de Stripe (ej. "sub_1RKtxeBdMx2Sby7CRFZxmXEN")
   @Column({ type: 'varchar', length: 255, nullable: true })
   external_subscription_id: string;
 
-  // ID del item de suscripción de Stripe (ej. "si_SFOlk5GrGlP3zL")
   @Column({ type: 'varchar', length: 255, nullable: true })
   external_subscription_item_id: string;
 
-  // ID del cliente de Stripe (ej. "cus_SFOlUBv9qHpfSZ")
   @Column({ type: 'varchar', length: 255, nullable: true })
   stripe_customer_id: string;
 
-  // ID del plan/precio real en Stripe (ej. "plan_SFOlu53ZPlHB42")
   @Column({ type: 'varchar', length: 255, nullable: true })
   stripe_plan_id: string;
 

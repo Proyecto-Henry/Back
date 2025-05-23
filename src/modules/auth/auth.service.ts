@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -17,7 +16,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Subscription } from 'src/entities/Subscription.entity';
 import { Repository } from 'typeorm';
 import { Admin } from 'src/entities/Admin.entity';
-import { OAuth2Client } from 'google-auth-library';
 import { Role } from 'src/enums/roles.enum';
 import { User } from 'src/entities/User.entity';
 import { UsersService } from '../users/users.service';
@@ -33,7 +31,6 @@ import { SuperAdminService } from '../superAdmins/supers.service';
 
 @Injectable()
 export class AuthService {
-  private googleClient: OAuth2Client;
   constructor(
     private readonly jwtService: JwtService,
     private readonly adminsService: AdminsService,
@@ -50,74 +47,7 @@ export class AuthService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Store)
     private readonly storesRepository: Repository<Store>,
-  ) {
-    this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-  }
-
-  //! Hay que cambiar a que sea con adminsService
-  // async verifyGoogleIdTokenAndLogin(
-  //   idToken: string,
-  // ): Promise<{ access_token: string }> {
-  //   try {
-  //     const ticket = await this.googleClient.verifyIdToken({
-  //       idToken: idToken,
-  //       audience: process.env.GOOGLE_CLIENT_ID,
-  //     });
-
-  //     const payload = ticket.getPayload();
-
-  //     if (!payload || !payload.email) {
-  //       throw new UnauthorizedException(
-  //         'Falta email o el token de google es invalido ',
-  //       );
-  //     }
-
-  //     const googleId = payload.sub;
-  //     const email = payload.email;
-  //     const firstname = payload.given_name;
-  //     const lastname = payload.family_name;
-  //     const picture = payload.picture;
-
-  //     //! FindByEmail en adminsService ya fue creado
-  //     // await this.userService.findByEmail(email)
-  //     let adminis = null;
-
-  //     if (!adminis) {
-  //       console.log(
-  //         `Admin no encontrado por email ${email}. Procede a crearse`,
-  //       );
-  //       adminis = await this.adminsService.create({
-  //         googleId: googleId,
-  //         email: email,
-  //         firstname: firstname,
-  //         lastname: lastname,
-  //         picture: picture,
-  //       });
-  //     }
-
-  //     const backendPayload = {
-  //       email: User.email,
-  //       sub: User.id,
-  //       role: user.role,
-  //     };
-
-  //     const accessToken = this.jwtService.sign(backendPayload);
-
-  //     return { access_token: accessToken };
-  //   } catch (error) {
-  //     console.error('🔥 Error al verificar el Google ID Token:', error);
-  //     if (
-  //       error.message.includes('Token used too late') ||
-  //       error.message.includes('Invalid token signature')
-  //     ) {
-  //       throw new UnauthorizedException('Invalid or expired Google token');
-  //     }
-  //     //! Si fallo otra cosa tiramos este error generico x ahora
-  //     throw new InternalServerErrorException(
-  //       'Fallo el proceso de autenticación',
-  //     );
-  //   }
-  // }
+  ) {}
 
   async login(loginUser: loginAuthDto) {
     let user: Admin | User | Super_Admin | null = null;
@@ -142,7 +72,6 @@ export class AuthService {
       },
     ];
 
-    // Ejecutar los chequeos en orden
     for (const check of loginChecks) {
       console.log(loginUser.email)
       const userFound = await check.searchUser();
@@ -185,7 +114,6 @@ export class AuthService {
         img_profile: (user as Admin).img_profile
     };
     
-    // Verificar si la suscripción está vencida
     if (role === Role.ADMIN) {
       const subscription = await this.subscriptionRepository.findOne({
         where: { admin: { email: user.email } },
@@ -198,12 +126,10 @@ export class AuthService {
       }
       const now = new Date();
       if (now > subscription.end_date) {
-        // Actualizar el estado de la suscripción a 'paused'
         subscription.status = Status_Sub.PAUSED;
         await this.subscriptionRepository.save(subscription);
       }
     }
-    // const { password, ...userWithoutPassword } = user
     let userMessage
     if (role === Role.USER) {
       userMessage = "✅Login exitoso! Bienvenido"
@@ -220,7 +146,6 @@ export class AuthService {
     };
   }
 
-  //TODO ADMINISTRADOR
   async signUpAdmin(admin: createAdmin) {
     const existAdmin = await this.adminsService.getAdminByEmail(admin.email);
     if (existAdmin) {
@@ -233,7 +158,7 @@ export class AuthService {
       throw new BadRequestException(
         'Algo salio mal durante el proceso de registro. Por favor intente de nuevo',
       );
-    // Buscar el país por id
+
     const countryEntity = admin.country
       ? await this.countryService.findCountryById(admin.country)
       : null;
@@ -242,15 +167,6 @@ export class AuthService {
       throw new Error('País no encontrado');
     }
 
-    // const existCountry = await this.countryService.findCountry(
-    //   admin.country.name,
-    // );
-    // console.log(existCountry);
-    // if (!existCountry) {
-    //   throw new BadRequestException(
-    //     'Parece que el pais ingresado no se encuentra almacenado',
-    //   );
-    // }
     const subscription = this.subscriptionService.addTrialSubscription();
     const newAdmin = {
       ...admin,
@@ -272,31 +188,24 @@ export class AuthService {
     };
   }
 
-  //TODO REGISTRO DE USUARIO/VENDEDOR
   async signUpUser(user: SignUpAuthDto, admin: any, newStore: any) {
     const hashedPassword = await bcrypt.hash(user.password, 10);
 
-    // creo el usuario
     const newUser = this.userRepository.create({
       ...user,
       email: user.email.trim().toLowerCase(),
       password: hashedPassword,
-      admin: admin, // administrador asociado al usuario
+      admin: admin,
       status: Status_User.ACTIVE,
-      store: newStore, // tienda que administrara
+      store: newStore,
     });
     const usuario = await this.usersService.save(newUser);
-    console.log('👦usuario creado: ', usuario);
-
-    // envio de notificacion por email
+    console.log('👦usuario creado');
     await this.mailService.sendNotificationMail(usuario.email, user.password);
-
     return usuario;
   }
 
-  //TODO CREAR TIENDA
   async buildStore(userStore: SignUpAuthDto, req: Request & { user: any }) {
-    // revisar el tipo de plan en la suscripción del administrador
     const subscription = await this.subscriptionRepository.findOne({
       where: { admin: { id: req.user.id } },
     });
@@ -307,9 +216,7 @@ export class AuthService {
       );
     }
 
-    // Verificar si el admin tiene una suscripción de prueba
     if (subscription.status === 'trial') {
-      // Contar las tiendas existentes del admin
       const storeCount = await this.storesRepository.count({
         where: { admin: { id: req.user.id }, status: true },
       });
@@ -322,7 +229,6 @@ export class AuthService {
     }
 
     if (subscription.status === 'active' && subscription.plan === '1 store') {
-      // Contar las tiendas existentes del admin
       const storeCount = await this.storesRepository.count({
         where: { admin: { id: req.user.id }, status: true },
       });
@@ -335,7 +241,6 @@ export class AuthService {
     }
 
     if (subscription.status === 'active' && subscription.plan === '2 stores') {
-      // Contar las tiendas existentes del admin
       const storeCount = await this.storesRepository.count({
         where: { admin: { id: req.user.id }, status: true },
       });
@@ -348,7 +253,6 @@ export class AuthService {
     }
 
     if (subscription.status === 'active' && subscription.plan === '4 stores') {
-      // Contar las tiendas existentes del admin
       const storeCount = await this.storesRepository.count({
         where: { admin: { id: req.user.id }, status: true },
       });
@@ -359,8 +263,6 @@ export class AuthService {
         );
       }
     }
-
-    // controlo que la direccion no se repita
     const existAddress = await this.storesService.findAddress(
       userStore.address,
     );
@@ -370,7 +272,6 @@ export class AuthService {
         'Parece que ya hay una tienda registrada en esa direccion',
       );
 
-    // controlo que el usuario no exista
     const userAlreadyRegister = await this.usersService.getUserByEmail(
       userStore.email,
     );
@@ -378,27 +279,18 @@ export class AuthService {
       throw new BadRequestException(
         'Parece que ya hay un usuario registrado con dicho email',
       );
-    // const validCountryCode = await this.countryService.findByCode(
-    //   userStore.countryCode,
-    // );
-    // if (!validCountryCode)
-    //   throw new BadRequestException('No existe el codigo de area');
-    // traigo las propiedades del administrador
     const admin = await this.adminsService.getAdminById(req.user.id);
 
-    // creo la tienda
     const newStore = this.storesRepository.create({
       ...userStore,
       admin: admin,
       user: undefined,
     });
     const store = await this.storesRepository.save(newStore);
-    console.log('🏪store creada: ', store);
+    console.log('🏪store creada');
 
-    // creo el usuario
     const user = await this.signUpUser(userStore, admin, newStore);
 
-    // actualizo la tienda con su usuario
     store.user = user;
     await this.storesRepository.save(store);
 

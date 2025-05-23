@@ -14,7 +14,6 @@ export class CountriesSeed {
   async seed() {
     const countryNames = countries.map((c) => c.name);
 
-    // Obtener todos los countries existentes de una vez
     const existingCountries = await this.countriesRepository.find({
       where: { name: In(countryNames) },
     });

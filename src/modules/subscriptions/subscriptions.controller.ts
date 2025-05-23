@@ -9,7 +9,6 @@ import {
   Req,
   RawBodyRequest,
   HttpCode,
-  Header,
 } from '@nestjs/common';
 
 import { SubscriptionsService } from './subscriptions.service';
@@ -83,7 +82,6 @@ export class SubscriptionsController {
     }
   }
 
-  
   @Post('webhook')
   @HttpCode(200)
   handleWebhook(@Req() req: RawBodyRequest<Request>) {

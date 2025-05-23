@@ -8,12 +8,6 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Country } from 'src/entities/Country.entity';
-import { Store } from 'src/entities/Store.entity';
-import { User } from 'src/entities/User.entity';
-import { Status_User } from 'src/enums/status_user.enum';
-import { CreateDateColumn } from 'typeorm';
-import { Status_Sub } from 'src/enums/status_sub.enum';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -56,10 +50,6 @@ export class createAdmin {
   @IsOptional()
   phone: string;
 
-  // @IsString()
-  // @IsOptional()
-  // imgProfile?: string;
-
   @ApiProperty({
         example: 1
   })
@@ -67,16 +57,4 @@ export class createAdmin {
   @IsOptional()
   country: number;
 
-  // @IsOptional()
-  // @IsString()
-  // googleId?: string;
-
-  // @CreateDateColumn({ type: 'timestamp' })
-  // created_at: Date;
-
-  /*
-  users: User[];
-
-  stores: Store[];
-  */
 }

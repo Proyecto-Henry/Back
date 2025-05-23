@@ -18,13 +18,6 @@ export class ProductsRepository {
     private readonly subscriptionsService: SubscriptionsService
   ) {}
   
-  // async getStockByStore(product_id: string[]) {
-  //   return await this.productsRepository.find({
-  //     where: { id: In(product_id) },
-  //     relations: ['store'],
-  //   });
-  // }
-
   async getProductsById(saleData: RegisterSaleDto) {
     const sale_details = saleData.sale_details;
     const productIds = sale_details.map((detail) => detail.product_id);
@@ -51,16 +44,13 @@ export class ProductsRepository {
       throw new error('Tienda no encontrada');
     }
 
-    // Buscar la suscripción del administrador
     const subscription = await this.subscriptionsService.getSubscriptionByAdminId(createProductDto.admin_id);
 
     if (!subscription) {
       throw new NotFoundException('Suscripción no encontrada para el administrador');
     }
 
-    // Si la suscripción es de prueba, aplicar restricciones
     if (subscription.status === 'trial') {
-      // Contar los productos activos (status: true) de la tienda
       const productCount = await this.productsRepository.count({
         where: { store: { id: store.id }, status: true },
       });
@@ -84,7 +74,7 @@ export class ProductsRepository {
     const products = await this.productsRepository.find({
       where: {
         store: { id: store_id, status: true },
-        status: true, // Filtrar productos con status: true
+        status: true,
       },
     });
     return products

@@ -1,5 +1,4 @@
 import { Admin } from 'src/entities/Admin.entity';
-import { Store } from 'src/entities/Store.entity';
 
 export class CreateStoreResponseDto {
   id: string;
