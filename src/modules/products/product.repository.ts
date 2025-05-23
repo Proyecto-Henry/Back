@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from 'src/entities/Product.entity';
 import { In, Repository } from 'typeorm';
@@ -15,9 +19,9 @@ export class ProductsRepository {
   constructor(
     @InjectRepository(Product) private productsRepository: Repository<Product>,
     @InjectRepository(Store) private storeRepository: Repository<Store>,
-    private readonly subscriptionsService: SubscriptionsService
+    private readonly subscriptionsService: SubscriptionsService,
   ) {}
-  
+
   // async getStockByStore(product_id: string[]) {
   //   return await this.productsRepository.find({
   //     where: { id: In(product_id) },
@@ -52,10 +56,15 @@ export class ProductsRepository {
     }
 
     // Buscar la suscripción del administrador
-    const subscription = await this.subscriptionsService.getSubscriptionByAdminId(createProductDto.admin_id);
+    const subscription =
+      await this.subscriptionsService.getSubscriptionByAdminId(
+        createProductDto.admin_id,
+      );
 
     if (!subscription) {
-      throw new NotFoundException('Suscripción no encontrada para el administrador');
+      throw new NotFoundException(
+        'Suscripción no encontrada para el administrador',
+      );
     }
 
     // Si la suscripción es de prueba, aplicar restricciones
@@ -87,32 +96,60 @@ export class ProductsRepository {
         status: true, // Filtrar productos con status: true
       },
     });
-    return products
+    return products;
   }
 
   async removeProduct(product_id: string): Promise<{ message: string }> {
-    const product = await this.productsRepository.findOneBy({id: product_id})
-    
+    const product = await this.productsRepository.findOneBy({ id: product_id });
+
     if (!product) {
       throw new NotFoundException('Producto no encontrado');
     }
-    product.status = false
-    await this.productsRepository.save(product)
+    product.status = false;
+    await this.productsRepository.save(product);
     return { message: 'Producto eliminado correctamente' };
   }
 
-  async updateProduct(product_id: string, updateProudctDto: UpdateProductDto) {
-    await this.productsRepository.update(product_id, updateProudctDto);
-    return this.productsRepository.findOne({
+  async updateProduct(product_id: string, updateProductDto: UpdateProductDto) {
+    if (updateProductDto == null) {
+      return { message: 'No se realizaron cambios' };
+    }
+    const cleanedDto = Object.entries(updateProductDto)
+      .filter(([_, value]) => value !== undefined)
+      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+
+    if (Object.keys(cleanedDto).length === 0) {
+      throw new BadRequestException(
+        'No se proporcionaron campos válidos para actualizar',
+      );
+    }
+
+    const existingProduct = await this.productsRepository.findOne({
       where: { id: product_id },
       relations: ['store'],
     });
+
+    if (!existingProduct) {
+      throw new NotFoundException('Producto no encontrado');
+    }
+
+    await this.productsRepository.update(product_id, updateProductDto);
+
+    const updatedProduct = await this.productsRepository.findOne({
+      where: { id: product_id },
+      relations: ['store'],
+    });
+
+    return {
+      message: 'Se realizaron cambios en el producto',
+      product: updatedProduct,
+    };
   }
 
   async findProductsById(id: UUID[]): Promise<Product[]> {
     return await this.productsRepository.find({
-      where: {id: In(id)},
-      relations: [ 'store' ]
+      where: { id: In(id) },
+      relations: ['store'],
     });
   }
 }
