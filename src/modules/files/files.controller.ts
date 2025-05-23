@@ -40,8 +40,8 @@ export class FilesController {
     ) {
         const result = await this.cloudinaryService.uploadImage(file)
         const imgUrl = result.secure_url
-        return this.adminsService.updateProfileAdmin({admin_id, img_profile: imgUrl})
-        
+        const response = await this.adminsService.updateProfileAdmin({admin_id, img_profile: imgUrl})
+        return {message: response?.message , imgUrl: imgUrl}
     }
 
     @ApiBearerAuth()
@@ -70,6 +70,7 @@ export class FilesController {
     ) {
         const result = await this.cloudinaryService.uploadImage(file)
         const imgUrl = result.secure_url
-        return this.storesService.uploadImageStore({store_id, img_store: imgUrl})
+        const response = await this.storesService.uploadImageStore({store_id, img_store: imgUrl})
+        return {message: response?.message , imgUrl: imgUrl}
     }
 }

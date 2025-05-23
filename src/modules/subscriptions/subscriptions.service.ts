@@ -9,7 +9,7 @@ export class SubscriptionsService {
    
   constructor(
     private readonly subscriptionsRepository: SubscriptionsRepository,
-    private readonly adminsService: AdminsService,
+    // private readonly adminsService: AdminsService,
   ) {}
 
   addTrialSubscription() {
@@ -17,7 +17,7 @@ export class SubscriptionsService {
   }
 
   async getSubscriptionByAdminId(admin_id: string) {
-    const foundAdmin = await this.adminsService.getAdminById(admin_id);
+    // const foundAdmin = await this.adminsService.getAdminById(admin_id);
 
     return this.subscriptionsRepository.getSubscriptionByAdminId(admin_id)
 

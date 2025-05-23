@@ -9,6 +9,7 @@ import { Product } from 'src/entities/Product.entity';
 
 @Injectable()
 export class SalesRepository {
+  
   constructor(
     @InjectRepository(Sale) private salesRepository: Repository<Sale>,
     @InjectRepository(Sale_Detail)
@@ -22,6 +23,7 @@ export class SalesRepository {
         store: {
           id: store_id,
         },
+        is_active: true
       },
       relations: {
         sale_details: {
@@ -115,7 +117,7 @@ export class SalesRepository {
 
   async getSaleById(sale_id: string) {
     const result = await this.salesRepository.findOne({
-      where: { id: sale_id },
+      where: { id: sale_id, is_active: true },
       relations: ['sale_details', "sale_details.product"], 
     });
 
@@ -136,75 +138,98 @@ export class SalesRepository {
   }
 
   async getAllSales() {
-    
-    const result = await this.salesRepository.find({
-      relations: ['sale_details', "sale_details.product", 'store'], 
-      order: { date: 'DESC' },
-    });
+  const result = await this.salesRepository.find({
+    where: { is_active: true },
+    relations: ['sale_details', 'sale_details.product', 'store'],
+    order: { date: 'DESC' },
+  });
 
-    const sales = result.map((sale) => ({
+  const sales = result.map((sale) => ({
     id: sale.id,
     date: sale.date,
     total: sale.total,
+    is_active: sale.is_active,
+    store: sale.store,
     sale_details: sale.sale_details.map((detail) => ({
       quantity: detail.quantity,
       product: {
         name: detail.product.name,
         price: detail.product.price,
       },
-    }))
+    })),
   }));
 
   return sales;
-  }
+}
 
+async disableSale(sale_id: string) {
+  const queryRunner = this.salesRepository.manager.connection.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
 
-  async deleteSale(sale_id: string) {
-    const queryRunner = this.salesRepository.manager.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  try {
+    const sale = await queryRunner.manager.findOne(Sale, {
+      where: { id: sale_id, is_active: true },
+      relations: { sale_details: { product: true } },
+    });
 
-    try {
-      // Obtener la venta con sus detalles y productos asociados
-      const sale = await queryRunner.manager.findOne(Sale, {
-        where: { id: sale_id },
-        relations: { sale_details: { product: true } },
-      });
-
-      if (!sale) {
-        throw new NotFoundException('Venta no encontrada');
-      }
-
-      // Restaurar el stock de los productos
-      for (const detail of sale.sale_details) {
-        const product = detail.product;
-        if (!product) {
-          throw new Error(`Producto no encontrado`);
-        }
-        // Incrementar el stock del producto según la cantidad vendida
-        product.stock = (product.stock) + detail.quantity;
-        // Guardar el producto actualizado
-        await queryRunner.manager.save(Product, product);
-        // Eliminar la venta con sus Sale_Detail
-        const result = await queryRunner.manager.delete(Sale, { id: sale_id });
-        // Confirmar la transacción
-        await queryRunner.commitTransaction();
-        return result.affected ?? 0;
-      }
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release()
+    if (!sale) {
+      throw new NotFoundException('Venta no encontrada');
     }
-    
-  }
 
-  async DeleteSalesByStoreId(store_id: string) {
-    await this.salesRepository.delete({ store: { id: store_id } });
-    return {
-      success: true,
-      message: "Ventas eliminadas exitosamente"
+
+    if(!sale.is_active){
+      throw new NotFoundException("Venta ya desactivada")
     }
+    for (const detail of sale.sale_details) {
+      const product = detail.product;
+      if (!product) {
+        throw new Error(`Producto no encontrado`);
+      }
+      product.stock += detail.quantity;
+      await queryRunner.manager.save(Product, product);
+    }
+
+    sale.is_active = false;
+    await queryRunner.manager.save(Sale, sale); // Guarda dentro de la transacción
+
+    await queryRunner.commitTransaction();
+    return { message: 'Venta eliminada y stock restaurado' };
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    throw error;
+  } finally {
+    await queryRunner.release();
   }
 }
+
+async deleteSalesByStoreId(store_id: string) {
+  const queryRunner = this.salesRepository.manager.connection.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    const sales = await queryRunner.manager.find(Sale, {
+    where: { store: { id: store_id }, is_active: true }
+  });
+
+  if (!sales) {
+      throw new NotFoundException('Ventas no encontradas');
+  }
+
+  for (const sale of sales) {
+    sale.is_active = false;
+    await queryRunner.manager.save(Sale, sale);
+  }
+
+  await queryRunner.commitTransaction();
+  return { message: 'Historial de ventas eliminado exitosamente' };
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    throw error;
+  } finally {
+    await queryRunner.release();
+  }
+}
+}
+

@@ -21,58 +21,63 @@ export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
   @Get('admin/:admin_id')
-  getSubscriptionByAdminId(@Param('admin_id') admin_id: string) {
+  async getSubscriptionByAdminId(@Param('admin_id') admin_id: string) {
     try {
-      return this.subscriptionsService.getSubscriptionByAdminId(admin_id);
+      const result = await this.subscriptionsService.getSubscriptionByAdminId(admin_id);
+      const {admin, ...subscription } = result
+      return { success: true, message: "Suscripción obtenida con éxito.", subscription: subscription
+      }
     } catch (error) {
       throw error
     }
   }
 
   @Get('user/:user_id')
-  getSubscriptionByUserId(@Param('user_id') user_id: string) {
+  async getSubscriptionByUserId(@Param('user_id') user_id: string) {
     try {
-      return this.subscriptionsService.getSubscriptionByUserId(user_id);
+      const result = await this.subscriptionsService.getSubscriptionByUserId(user_id);
+      return { success: true, message: "Suscripción obtenida con éxito.", subscription: result
+      }
     } catch (error) {
       throw error
     }
   }
 
   @Post('createSubscription')
-  createSubscription(@Body() data: createSubscriptionDto) {
+  async createSubscription(@Body() data: createSubscriptionDto) {
     try {
-      this.subscriptionsService.createSubscription(data);
-      return { success: true, message: 'Suscripción creada exitosamente.' };
+      const result = await this.subscriptionsService.createSubscription(data);
+      return { success: true, message: 'Suscripción creada exitosamente.', subscription: result };
     } catch (error) {
       throw new HttpException('No se pudo realizar el pago. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @Post('canceledSubscription/:subscription_id')
-  canceledSubscription(@Param('subscription_id') subscription_id: string) {
+  async canceledSubscription(@Param('subscription_id') subscription_id: string) {
     try {
-      this.subscriptionsService.canceledSubscription(subscription_id);
-      return { success: true, message: 'Suscripción cancelada correctamente.' };
+      const result = await this.subscriptionsService.canceledSubscription(subscription_id);
+      return { success: true, message: 'Suscripción cancelada correctamente.', subscription: result };
     } catch (error) {
       throw new HttpException('Error al cancelar la subscripción. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @Post('reactivateSubscription/:subscription_id')
-  reactivateSubscription(@Param('subscription_id') subscription_id: string){
+  async reactivateSubscription(@Param('subscription_id') subscription_id: string){
     try {
-      this.subscriptionsService.reactivateSubscription(subscription_id)
-      return { success: true, message: 'Suscripción reactivada correctamente.' };
+      const result = await this.subscriptionsService.reactivateSubscription(subscription_id)
+      return { success: true, message: 'Suscripción reactivada correctamente.', subscription: result };
     } catch (error) {
       throw new HttpException('Error al reactivar la subscripción. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @Post('changePlan')
-  changePlan(@Body() data: changePlanDto){
+  async changePlan(@Body() data: changePlanDto){
     try {
-      this.subscriptionsService.changePlan(data)
-      return { success: true, message: 'Cambio de plan exitoso.' };
+      const result = await this.subscriptionsService.changePlan(data)
+      return { success: true, message: 'Cambio de plan exitoso.', subscription: result };
     } catch (error) {
       throw new HttpException('Error al actualizar el plan. intente más tarde', HttpStatus.INTERNAL_SERVER_ERROR);
     }

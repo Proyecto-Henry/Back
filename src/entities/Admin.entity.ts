@@ -53,7 +53,7 @@ export class Admin {
   @OneToMany(() => Store, (store) => store.admin)
   stores: Store[];
 
-  @OneToMany(() => User, (user) => user.admin)
+  @OneToMany(() => User, (user) => user.admin, { cascade: ['update'] })
   users: User[];
 
   @OneToOne(() => Subscription, (subscription) => subscription.admin)

@@ -18,6 +18,7 @@ import { Product } from 'src/entities/Product.entity';
 import { Sale } from 'src/entities/Sale.entity';
 import { Sale_Detail } from 'src/entities/Sale_Detail.entity';
 import { UsersService } from '../users/users.service';
+import { StripeService } from 'src/common/stripe.service';
 
 @Injectable()
 export class AdminsRepository {
@@ -27,7 +28,8 @@ export class AdminsRepository {
     @InjectRepository(Country) private countrysRepository: Repository<Country>,
     private dataSource: DataSource,
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly stripeService: StripeService
   ) {}
 
   async getAllAdmins() {
@@ -82,7 +84,7 @@ export class AdminsRepository {
     if (!result) {
       throw new NotFoundException('Admin no encontrado');
     }
-
+    result.stores = result.stores?.filter(store => store.status === true);
     const admin = {
       id: result.id,
       name: result.name,
@@ -118,6 +120,8 @@ export class AdminsRepository {
     if(!admin) throw new NotFoundException('No se encontro al administrador');
     if (admin.status === Status_User.ACTIVE) {
       admin.status = Status_User.INACTIVE;
+      const admin_subscriptonId = admin.subscription.external_subscription_id
+      await this.stripeService.canceledSubscription(admin_subscriptonId)
       admin.users.forEach((user) => {user.status = Status_User.INACTIVE});
       const result = await this.adminsRepository.save(admin);
 
