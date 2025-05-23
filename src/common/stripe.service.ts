@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Subscription } from 'src/entities/Subscription.entity';
 import { Plan } from 'src/enums/plan.enum';
@@ -16,7 +16,7 @@ import { Repository } from 'typeorm';
 
       constructor(
       @InjectRepository(Subscription) private subscriptionsRepository: Repository<Subscription>,
-      private readonly adminsService: AdminsService
+      @Inject(forwardRef(() => AdminsService)) private readonly adminsService: AdminsService
       ) {
           const stripeKey = process.env.STRIPE_SECRET_KEY;
 
@@ -114,7 +114,11 @@ import { Repository } from 'typeorm';
           await queryRunner.manager.save(subscription);
           await queryRunner.commitTransaction();
           console.log('✅ Suscripción guardada en la base de datos:', subscription?.id);
-          return subscription
+          if (!subscription) {
+            throw new Error('No se pudo crear la suscripción.');
+          }
+          const { admin: _admin, ...subscriptionWithoutAdmin } = subscription;
+          return subscriptionWithoutAdmin
         } catch (error) {
           await queryRunner.rollbackTransaction();
       
@@ -169,9 +173,13 @@ import { Repository } from 'typeorm';
           await queryRunner.manager.save(subscription);
           console.log('✅ Estado actualizado en la base de datos');
         }
-
         await queryRunner.commitTransaction();
         console.log('✅ Transacción completada correctamente');
+        if (!subscription) {
+            throw new Error('No se pudo crear la suscripción.');
+        }
+        const { admin: _admin, ...subscriptionWithoutAdmin } = subscription;
+        return subscriptionWithoutAdmin
       } catch (error) {
         console.error('❌ Error al cancelar suscripción:', error);
         // revertir el cambio en Stripe (eliminando la cancelación programada)
@@ -213,6 +221,8 @@ import { Repository } from 'typeorm';
       console.log(`💾 Estado actualizado a ACTIVE en la base de datos para la suscripción: ${subscription_id}`);
       await queryRunner.commitTransaction();
       console.log('✅ Suscripción reactivada con éxito.');
+      const { admin, ...subscriptionWithoutAdmin } = subscription;
+      return subscriptionWithoutAdmin
       }
       } catch (error) {
         await queryRunner.rollbackTransaction();
@@ -279,9 +289,13 @@ import { Repository } from 'typeorm';
           await queryRunner.manager.save(subscription);
           console.log('✅ Suscripción actualizada en base de datos:', subscription.id);
         }
-        return subscription
         await queryRunner.commitTransaction();
         console.log('✅ Transacción completada exitosamente.');
+        if (!subscription) {
+            throw new Error('No se pudo crear la suscripción.');
+          }
+          const { admin, ...subscriptionWithoutAdmin } = subscription;
+          return subscriptionWithoutAdmin
       } catch (error) {
         console.error('❌ Error en el proceso de cambio de plan:', error)
         await queryRunner.rollbackTransaction();
