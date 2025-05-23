@@ -13,7 +13,7 @@ async function bootstrap() {
     express.raw({ type: 'application/json' }) // esto es para Stripe
   );
   app.enableCors({
-    origin: 'http://localhost:3001', // Cambia esto por el origen de tu frontend
+    origin: 'https://front-tau-gold.vercel.app', // Cambia esto por el origen de tu frontend
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Si usas cookies o auth headers
   });
