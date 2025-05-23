@@ -1,6 +1,9 @@
+.dockerignore
+docker-compose.yaml
+Dockerfile
+
 # Dependencias
 node_modules/
-
 
 # Compilados
 dist/

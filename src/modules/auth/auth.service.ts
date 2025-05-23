@@ -284,7 +284,6 @@ export class AuthService {
       store: newStore, // tienda que administrara
     });
     const usuario = await this.usersService.save(newUser);
-    console.log('👦usuario creado: ', usuario);
 
     // envio de notificacion por email
     await this.mailService.sendNotificationMail(usuario.email, user.password);
@@ -391,7 +390,6 @@ export class AuthService {
       user: undefined,
     });
     const store = await this.storesRepository.save(newStore);
-    console.log('🏪store creada: ', store);
 
     // creo el usuario
     const user = await this.signUpUser(userStore, admin, newStore);

@@ -72,12 +72,25 @@ export class ProductsRepository {
       }
     }
 
+    const productDisable = await this.productsRepository.findOneBy({
+      name: createProductDto.name.toLowerCase().trim(),
+      status: false
+    });
+    if(productDisable) {
+      // Verifico que el producto exista pero este desabilitado, en tal caso solo lo activo nuevamente
+      await this.productsRepository.update(productDisable.id, { status: true });
+      const productActive = await this.productsRepository.findOneBy({ id: productDisable.id })
+      return productActive!;
+    }
+    else {
+      // Si no existe el producto, lo creo
     const newProduct = this.productsRepository.create({
       ...createProductDto,
+      name: createProductDto.name.toLowerCase().trim(),
       store,
     });
-
-    return this.productsRepository.save(newProduct);
+    return await this.productsRepository.save(newProduct);
+    }
   }
 
   async findProductsByStoreId(store_id: string): Promise<Product[]> {

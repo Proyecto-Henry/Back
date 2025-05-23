@@ -35,6 +35,18 @@
 	}
 }
 
+### ✅Respuesta con status code 200 para super admin
+
+{
+	"user": {
+		"id": "f6c1fb69-8c85-4184-8623-4edafbffaa0e",
+		"name": "superAdmin",
+		"email": "superadmin@gmail.com"
+	},
+	"role": "super-admin", 
+	"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY2YzFmYjY5LThjODUtNDE4NC04NjIzLTRlZGFmYmZmYWEwZSIsIm5hbWUiOiJzdXBlckFkbWluIiwiZW1haWwiOiJzdXBlcmFkbWluQGdtYWlsLmNvbSIsInJvbGUiOiJzdXBlci1hZG1pbiIsImlhdCI6MTc0NzQzMjQyMCwiZXhwIjoxNzQ3NDk3MjIwfQ.pz5WJLyISuOvo5XlVUl8CFpuw3fP1MD8yih9JjsykpY"
+}
+
 ### Se crea una variable role que segun en que tabla encuentra al usuario le asigne el valor user o admin.
 
 ### ❌Respuesta con status code 400
