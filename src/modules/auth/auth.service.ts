@@ -16,8 +16,7 @@ import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Subscription } from 'src/entities/Subscription.entity';
 import { Repository } from 'typeorm';
-import { Admin } from 'src/entities/Admin.entity';
-import { OAuth2Client } from 'google-auth-library';
+import { Admin } from 'src/entities/Admin.entity'
 import { Role } from 'src/enums/roles.enum';
 import { User } from 'src/entities/User.entity';
 import { UsersService } from '../users/users.service';
@@ -33,7 +32,6 @@ import { SuperAdminService } from '../superAdmins/supers.service';
 
 @Injectable()
 export class AuthService {
-  private googleClient: OAuth2Client;
   constructor(
     private readonly jwtService: JwtService,
     private readonly adminsService: AdminsService,
@@ -50,9 +48,7 @@ export class AuthService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Store)
     private readonly storesRepository: Repository<Store>,
-  ) {
-    this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-  }
+  ) {}
 
   //! Hay que cambiar a que sea con adminsService
   // async verifyGoogleIdTokenAndLogin(
@@ -164,8 +160,10 @@ export class AuthService {
     if (!validPassword)
       throw new UnauthorizedException('❌Credenciales inválidas');
 
-    if((user as Admin | User).status === Status_User.INACTIVE){
+    if (user instanceof Admin && user.status === Status_User.INACTIVE) {
       throw new UnauthorizedException('❌Su cuenta ha sido suspendida por violar los Términos de Uso.');
+    } else if (user instanceof User && user.status === Status_User.INACTIVE) {
+      throw new UnauthorizedException('❌Su cuenta ha sido suspendida.');
     }
     
     const payload = {
@@ -359,7 +357,11 @@ export class AuthService {
         );
       }
     }
-
+    if(subscription.status === 'cancelled') {
+      throw new BadRequestException(
+          "Cancelaste la suscripción, no podés agregar una tienda",
+      );
+    }
     // controlo que la direccion no se repita
     const existAddress = await this.storesService.findAddress(
       userStore.address,
@@ -456,6 +458,9 @@ export class AuthService {
         user: user,
       };
     } else if (googleId === admin.google_id) {
+      if (admin.status === Status_User.INACTIVE) {
+      throw new UnauthorizedException('❌Su cuenta ha sido suspendida por violar los Términos de Uso.');
+      }
       const payload = {
         id: admin.id,
         email: admin.email,

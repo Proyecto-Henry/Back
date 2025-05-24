@@ -25,12 +25,13 @@ export class DuplicatedProduct implements CanActivate {
         const newProduct = await this.productRepo.findOne({
             where: {
                 name: name.toLowerCase().trim(),
-                store: { id: store_id }
+                store: { id: store_id },
+                status: true
             },
             relations: ['store']
         })
+        if(newProduct) throw new BadRequestException('El producto ya se encuentra agregado') 
 
-        if(newProduct) throw new BadRequestException('El producto ya se encuentra agregado, editelo en su lugar') 
         return true;
     }
 }

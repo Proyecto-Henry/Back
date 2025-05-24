@@ -29,7 +29,7 @@ export class AdminsRepository {
     private dataSource: DataSource,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
-    private readonly stripeService: StripeService
+    // private readonly stripeService: StripeService
   ) {}
 
   async getAllAdmins() {
@@ -120,8 +120,8 @@ export class AdminsRepository {
     if(!admin) throw new NotFoundException('No se encontro al administrador');
     if (admin.status === Status_User.ACTIVE) {
       admin.status = Status_User.INACTIVE;
-      const admin_subscriptonId = admin.subscription.external_subscription_id
-      await this.stripeService.canceledSubscription(admin_subscriptonId)
+      // const admin_subscriptonId = admin.subscription.external_subscription_id
+      // await this.stripeService.canceledSubscription(admin_subscriptonId)
       admin.users.forEach((user) => {user.status = Status_User.INACTIVE});
       const result = await this.adminsRepository.save(admin);
 

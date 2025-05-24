@@ -19,7 +19,7 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException('Token not found');
+      throw new UnauthorizedException('❌Credenciales de autenticacion no fueron enviadas');
     }
 
     try {
@@ -27,8 +27,8 @@ export class AuthGuard implements CanActivate {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
       request['user'] = payload;
-    } catch {
-      throw new UnauthorizedException('El token admin es requerido');
+    } catch(error) {
+      throw new UnauthorizedException('ℹ️Para registrar una tienda primero inicie sesion');
     }
     return true;
   }

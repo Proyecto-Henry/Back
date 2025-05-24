@@ -13,7 +13,7 @@ async function bootstrap() {
     express.raw({ type: 'application/json' }) // esto es para Stripe
   );
   app.enableCors({
-    origin: 'http://localhost:3001', // Cambia esto por el origen de tu frontend
+    origin: 'http://localhost:3000', // Cambia esto por el origen de tu frontend
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Si usas cookies o auth headers
   });
@@ -45,7 +45,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document);
-  const port = process.env.PORT ?? 3000;
+  const port = process.env.PORT ?? 3001;
 
   const countriesSeed = app.get(CountriesSeed);
   await countriesSeed.seed();
